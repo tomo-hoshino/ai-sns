@@ -244,14 +244,14 @@ docs(api): clarify create post response
 
 ### 現状（重要）
 
-- このrepositoryは現在ドキュメントのみです。`package.json`、`src/`、`supabase/` などのapplication codeはまだ存在しません（`docs/TASK.md` のT-001〜T-034はすべて未着手）。
-- そのため `pnpm dev` / `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build` は、Next.jsのscaffold（T-001以降）が実装されるまで実行できません。存在しないapplicationのbuild/run/testを試みないでください。
-- toolchainはCloud環境に用意済みです: Node.js 22系、pnpm 10系（`corepack` 利用可）。追加のsystem依存は不要です。
+- T-001完了時点では Next.js App Router scaffold があり、`pnpm dev` / `pnpm lint` / `pnpm build` が動きます。タイムライン・投稿・Supabase・OpenAI連携は未実装です（`docs/TASK.md` のT-002以降を参照）。
+- `pnpm typecheck` / `pnpm test` / `pnpm format:check` は T-002/T-003 で script追加後に利用可能になります。
+- toolchainはCloud環境に用意済みです: Node.js 22系、pnpm 10系（`corepack` 利用可）。`.npmrc` の `public-hoist-pattern` は ESLint plugin解決用です。削除しないでください。
 
-### 実装開始後の起動・検証
+### 起動・検証
 
-- 依存関係のinstallは `pnpm install`。update scriptは `package.json` が存在する場合のみ `pnpm install` を実行します（docs-onlyの現状ではskip）。
-- 標準の起動・品質checkコマンドは `README.md` の「ローカル起動」「品質チェック」sectionを参照（重複記載しない）。
-- application全体をend-to-endで動かすには外部serviceのcredentialsが必要です。`README.md` の「環境変数を設定」にある5変数（`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `OPENAI_MODEL`, `AI_REPLIES_ENABLED`）を `.env.local` に設定します。
-- OpenAI呼び出しを避けてtimeline/投稿だけを検証したい場合は `AI_REPLIES_ENABLED=false` にできます。
-- これらのcredentialsはCloud AgentのSecretsに設定してください（VM再起動間で永続化されます）。secretはserver-onlyで扱い、clientやlogへ出さないこと。
+- 依存関係のinstallは `pnpm install`（update scriptが実行済み前提）。
+- 標準の起動・品質checkコマンドは `README.md` の「ローカル起動」「品質チェック」sectionを参照。現状すぐ使えるのは `pnpm dev`、`pnpm lint`、`pnpm build`。
+- Supabase / OpenAI 連携の実装後は、`README.md` の5変数（`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `OPENAI_MODEL`, `AI_REPLIES_ENABLED`）を `.env.local` に設定します。現状のscaffold起動には不要です。
+- OpenAI呼び出しを避けてtimeline/投稿だけを検証したい場合は `AI_REPLIES_ENABLED=false` にできます（該当実装後）。
+- credentialsはCloud AgentのSecretsに設定してください。secretはserver-onlyで扱い、clientやlogへ出さないこと。
