@@ -30,9 +30,11 @@ const POST_WITH_AUTHOR_SELECT = `
   )
 ` as const;
 
+// Use column hint for the self-FK. Constraint-name hint can miss in PostgREST
+// schema cache even when posts_parent_post_id_fkey exists in generated types.
 const TIMELINE_POST_SELECT = `
   ${POST_WITH_AUTHOR_SELECT},
-  replies:posts!posts_parent_post_id_fkey(count)
+  replies:posts!parent_post_id(count)
 ` as const;
 
 export type FindTimelinePageParams = {
