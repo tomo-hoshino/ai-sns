@@ -26,7 +26,12 @@ export default async function HomePage() {
         </p>
       </div>
 
-      <PostList posts={timeline.data} aiAccounts={aiAccountsResponse.data} />
+      <PostList
+        posts={timeline.data}
+        aiAccounts={aiAccountsResponse.data}
+        initialNextCursor={timeline.page.nextCursor}
+        initialHasMore={timeline.page.hasMore}
+      />
     </section>
   );
 }

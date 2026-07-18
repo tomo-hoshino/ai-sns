@@ -1,13 +1,31 @@
+"use client";
+
+import { LoadMoreButton } from "@/features/posts/components/load-more-button";
 import { PostCard } from "@/features/posts/components/post-card";
+import { useLoadMorePosts } from "@/features/posts/hooks/use-load-more-posts";
 import type { Account } from "@/types/account";
 import type { TimelinePost } from "@/types/post";
 
 export type PostListProps = {
   posts: readonly TimelinePost[];
   aiAccounts: readonly Account[];
+  initialNextCursor?: string | null;
+  initialHasMore?: boolean;
 };
 
-export function PostList({ posts, aiAccounts }: PostListProps) {
+export function PostList({
+  posts: initialPosts,
+  aiAccounts,
+  initialNextCursor = null,
+  initialHasMore = false,
+}: PostListProps) {
+  const { posts, hasMore, isLoading, errorMessage, loadMore } =
+    useLoadMorePosts({
+      initialPosts,
+      initialNextCursor,
+      initialHasMore,
+    });
+
   if (posts.length === 0) {
     return (
       <div
@@ -25,16 +43,27 @@ export function PostList({ posts, aiAccounts }: PostListProps) {
   }
 
   return (
-    <ul className="space-y-3">
-      {posts.map((post) => (
-        <li key={post.id}>
-          <PostCard
-            post={post}
-            aiAccounts={aiAccounts}
-            replyCount={post.replyCount}
-          />
-        </li>
-      ))}
-    </ul>
+    <div className="space-y-3">
+      <ul className="space-y-3">
+        {posts.map((post) => (
+          <li key={post.id}>
+            <PostCard
+              post={post}
+              aiAccounts={aiAccounts}
+              replyCount={post.replyCount}
+            />
+          </li>
+        ))}
+      </ul>
+
+      <LoadMoreButton
+        hasMore={hasMore}
+        isLoading={isLoading}
+        errorMessage={errorMessage}
+        onLoadMore={() => {
+          void loadMore();
+        }}
+      />
+    </div>
   );
 }
