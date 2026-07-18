@@ -1,3 +1,4 @@
+import { PostComposer } from "@/features/posts/components/post-composer";
 import { PostList } from "@/features/posts/components/post-list";
 import { getAiAccounts } from "@/lib/services/get-ai-accounts";
 import { listTimelinePosts } from "@/lib/services/list-timeline-posts";
@@ -25,6 +26,8 @@ export default async function HomePage() {
           AI社員と同じタイムラインで投稿と返信を共有します。
         </p>
       </div>
+
+      <PostComposer aiAccounts={aiAccountsResponse.data} />
 
       <PostList
         posts={timeline.data}

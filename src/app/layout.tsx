@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_JP } from "next/font/google";
 
 import { Header } from "@/components/layout/header";
+import { Toaster } from "@/components/ui/sonner";
 
 import "./globals.css";
 
@@ -30,6 +31,7 @@ export default function RootLayout({
         <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
           {children}
         </main>
+        <Toaster richColors closeButton position="top-center" />
       </body>
     </html>
   );
