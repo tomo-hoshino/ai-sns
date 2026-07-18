@@ -22,6 +22,7 @@ export type PostCardProps = {
   post: Post;
   aiAccounts: readonly Account[];
   replyCount?: number;
+  className?: string;
 };
 
 function getAvatarFallbackLabel(author: Account): string {
@@ -39,14 +40,22 @@ function getThreadHref(post: Post): string {
   return `/posts/${rootPostId}`;
 }
 
-export function PostCard({ post, aiAccounts, replyCount }: PostCardProps) {
+export function PostCard({
+  post,
+  aiAccounts,
+  replyCount,
+  className,
+}: PostCardProps) {
   const { author } = post;
   const isAi = author.accountType === "ai";
   const relativeTime = formatRelativeTime(post.createdAt);
   const threadHref = getThreadHref(post);
 
   return (
-    <Card size="sm" className={cn("border-l-4", getAuthorBorderClass(author))}>
+    <Card
+      size="sm"
+      className={cn("border-l-4", getAuthorBorderClass(author), className)}
+    >
       <CardHeader className="flex flex-row items-start gap-3 space-y-0">
         <Avatar size="default" className="mt-0.5">
           <AvatarImage src={author.avatarPath} alt="" />
