@@ -17,3 +17,23 @@ export class CreatePostError extends Error {
     this.code = code;
   }
 }
+
+export type GetThreadErrorCode = "THREAD_NOT_FOUND";
+
+/**
+ * Domain error from getThread. Missing roots and reply IDs both map here;
+ * the repository returns null for either case.
+ */
+export class GetThreadError extends Error {
+  readonly name = "GetThreadError";
+  readonly code: GetThreadErrorCode;
+
+  constructor(
+    code: GetThreadErrorCode,
+    message: string,
+    options?: { cause?: unknown },
+  ) {
+    super(message, options);
+    this.code = code;
+  }
+}

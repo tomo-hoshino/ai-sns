@@ -125,6 +125,17 @@ export const listPostsQuerySchema = z.strictObject({
   cursor: opaqueCursorSchema.optional(),
 });
 
+export const getThreadParamsSchema = z.strictObject({
+  id: uuidSchema,
+});
+
+export const getThreadResponseSchema = z.strictObject({
+  data: z.strictObject({
+    root: postSchema,
+    replies: z.array(postSchema),
+  }),
+});
+
 export type CreatePostRequestInput = z.input<typeof createPostRequestSchema>;
 export type CreatePostRequestParsed = z.output<typeof createPostRequestSchema>;
 export type CreatePostResponseParsed = z.output<
@@ -132,3 +143,5 @@ export type CreatePostResponseParsed = z.output<
 >;
 export type ListPostsQueryParsed = z.output<typeof listPostsQuerySchema>;
 export type ListPostsResponseParsed = z.output<typeof listPostsResponseSchema>;
+export type GetThreadParamsParsed = z.output<typeof getThreadParamsSchema>;
+export type GetThreadResponseParsed = z.output<typeof getThreadResponseSchema>;
