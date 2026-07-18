@@ -46,6 +46,20 @@ export const listPostsResponseSchema = z.strictObject({
   }),
 });
 
+export const aiAccountSchema = z.strictObject({
+  id: uuidSchema,
+  handle: z.string().min(1),
+  displayName: z.string().min(1),
+  bio: z.string(),
+  accountType: z.literal("ai"),
+  personaKey: personaKeySchema,
+  avatarPath: z.string().min(1),
+});
+
+export const listAiAccountsResponseSchema = z.strictObject({
+  data: z.array(aiAccountSchema),
+});
+
 export const postContentSchema = z
   .string({
     error: "投稿内容を入力してください。",
