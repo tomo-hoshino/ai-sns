@@ -88,6 +88,33 @@ export const createPostRequestSchema = z.strictObject({
   content: postContentSchema,
 });
 
+export const aiReplyStatusSchema = z.enum([
+  "not_requested",
+  "completed",
+  "partial",
+  "failed",
+  "disabled",
+]);
+
+export const failedAiSchema = z.strictObject({
+  handle: z.string().min(1),
+  code: z.enum(["GENERATION_FAILED", "REPLY_SAVE_FAILED"]),
+});
+
+export const createPostResponseSchema = z.strictObject({
+  data: z.strictObject({
+    post: postSchema,
+    aiReplies: z.array(postSchema),
+  }),
+  meta: z.strictObject({
+    aiReplyStatus: aiReplyStatusSchema,
+    mentionedAiHandles: z.array(z.string()),
+    succeededAiHandles: z.array(z.string()),
+    failedAi: z.array(failedAiSchema),
+  }),
+  requestId: uuidSchema,
+});
+
 export const listPostsQuerySchema = z.strictObject({
   limit: z.preprocess((value) => {
     if (value === undefined || value === "") {
@@ -100,5 +127,8 @@ export const listPostsQuerySchema = z.strictObject({
 
 export type CreatePostRequestInput = z.input<typeof createPostRequestSchema>;
 export type CreatePostRequestParsed = z.output<typeof createPostRequestSchema>;
+export type CreatePostResponseParsed = z.output<
+  typeof createPostResponseSchema
+>;
 export type ListPostsQueryParsed = z.output<typeof listPostsQuerySchema>;
 export type ListPostsResponseParsed = z.output<typeof listPostsResponseSchema>;

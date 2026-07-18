@@ -69,13 +69,11 @@ export function validationErrorResponse(
   );
 }
 
-export function databaseErrorResponse(requestId: string): NextResponse {
-  return jsonError(
-    requestId,
-    500,
-    "DATABASE_ERROR",
-    "データの取得に失敗しました。",
-  );
+export function databaseErrorResponse(
+  requestId: string,
+  message = "データの取得に失敗しました。",
+): NextResponse {
+  return jsonError(requestId, 500, "DATABASE_ERROR", message);
 }
 
 export function internalErrorResponse(requestId: string): NextResponse {
