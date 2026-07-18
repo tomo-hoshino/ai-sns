@@ -2,5 +2,9 @@ allowBuilds:
   sharp: false
   unrs-resolver: false
 
+# shadcn@4.13.1 is newer than pnpm's default 24h minimumReleaseAge during Day 1 setup.
+minimumReleaseAgeExclude:
+  - shadcn@4.13.1
+
 overrides:
   electron-to-chromium: 1.5.392

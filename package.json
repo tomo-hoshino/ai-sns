@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "db:types": "node scripts/db-types.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.7",
