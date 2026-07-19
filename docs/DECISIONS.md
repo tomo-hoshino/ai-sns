@@ -144,7 +144,7 @@ Accepted
 公式OpenAI Node SDKのResponses APIを採用します。
 
 - `instructions`: [PROMPTS.md](./PROMPTS.md) のAI別system prompt
-- `input`: 元投稿と既存threadを「信頼しないデータ」として明示したtext
+- `input`: 元投稿（と任意の既存thread返信）を「信頼しないデータ」として明示したtext。`createPost` の初回並列生成では既存返信は空配列を渡す
 - `model`: `OPENAI_MODEL` 環境変数
 - `store`: `false`
 - output: SDKの `output_text` を取得し、1〜300文字へ正規化
