@@ -153,6 +153,11 @@ pnpm test
 pnpm build
 ```
 
+## Production
+
+- Production URL: [https://ai-sns-six.vercel.app](https://ai-sns-six.vercel.app)
+- Vercel project: `hoshi-t/ai-sns`
+
 ## Vercelへデプロイ
 
 1. GitHubへリポジトリをpushする。
@@ -167,7 +172,23 @@ pnpm build
 5. Supabaseへmigrationとseedを反映してからVercelをデプロイする。
 6. デプロイURLで [docs/SPEC.md](./docs/SPEC.md) の完成条件を確認する。
 
-公開前にOpenAIプロジェクト側で月額予算・使用量アラートを設定してください。認証なしMVPのため、デモ終了時にAI返信を止める場合は `AI_REPLIES_ENABLED=false` へ変更します。
+### 運用ガード（予算・緊急停止）
+
+公開前に OpenAI プロジェクト側で月額予算と使用量アラートを設定してください。
+
+1. [OpenAI Platform](https://platform.openai.com/) で対象プロジェクトを開く。
+2. Project の Limits / Budget 画面で月額予算を設定する。
+3. 使用量が閾値に達したときの通知（使用量アラート）を有効にする。
+4. Usage 画面で実測コストを確認する。
+
+認証なしMVPのため、デモ終了時や障害時は AI 返信を次の手順で止めます。
+
+1. Vercel Dashboard で project `hoshi-t/ai-sns` を開く。
+2. Settings → Environment Variables で `AI_REPLIES_ENABLED` を `false` に変更する（Production を含む対象環境）。
+3. Production を再デプロイする（環境変数変更後の Redeploy）。
+4. 投稿は受け付けるが、AI 返信は生成されず API は `aiReplyStatus: "disabled"` を返すことを確認する。
+
+ローカルでは `.env.local` の `AI_REPLIES_ENABLED=false` でも同じ停止ができます。
 
 ## ドキュメント
 
