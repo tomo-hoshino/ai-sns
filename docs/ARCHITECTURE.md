@@ -149,6 +149,8 @@ src/
 │   │   └── posts/
 │   │       ├── [id]/route.ts          # GET thread
 │   │       └── route.ts               # GET timeline / POST post
+│   ├── auth/callback/route.ts          # magic link code → session
+│   ├── login/page.tsx                  # magic link ログイン
 │   ├── posts/[id]/
 │   │   ├── page.tsx                    # スレッド画面
 │   │   ├── loading.tsx
@@ -159,9 +161,12 @@ src/
 │   ├── not-found.tsx
 │   └── page.tsx                        # タイムライン画面
 ├── components/
-│   ├── layout/header.tsx
+│   ├── layout/header.tsx               # ロゴ + HeaderAuth
 │   └── ui/                             # shadcn/ui CLIの生成物のみ
 ├── features/
+│   ├── auth/
+│   │   ├── components/                 # LoginForm、LogoutButton、HeaderAuth
+│   │   └── utils/                      # safe-next-path 等
 │   └── posts/
 │       ├── components/
 │       │   ├── ai-mention-list.tsx
@@ -197,8 +202,14 @@ src/
 │   │   ├── get-thread.ts
 │   │   ├── list-timeline-posts.ts
 │   │   └── errors.ts
-│   ├── supabase/server.ts              # service role client、server-only
+│   ├── supabase/
+│   │   ├── server.ts                   # service role（repository / AI）
+│   │   ├── session.ts                  # cookie session（Auth、server）
+│   │   ├── browser.ts                  # Auth 用 browser client
+│   │   ├── get-session-user.ts         # Header / login 用の任意 session 取得
+│   │   └── update-session.ts           # proxy からの session refresh
 │   ├── validations/
+│   │   ├── auth.ts                     # magic link email
 │   │   ├── common.ts
 │   │   └── post.ts
 │   ├── utils.ts
@@ -209,6 +220,8 @@ src/
     ├── database.ts                     # Supabase生成型
     └── post.ts
 ```
+
+リポジトリ直下の `proxy.ts` は Auth session cookie の refresh 用（未ログインでも閲覧可。ログイン必須リダイレクトはしない）。
 
 ### 配置ルール
 
@@ -458,7 +471,7 @@ flowchart TB
 | 機能                           | 状態                                         | 主な変更箇所                                                  |
 | ------------------------------ | -------------------------------------------- | ------------------------------------------------------------- |
 | 認証基盤（profiles連携・RLS）  | **T-110 完了**（本ドキュメント + migration） | Auth trigger、RLS、ADR-009                                    |
-| ログイン UI                    | T-111                                        | Header、magic link画面、session cookie client                 |
+| ログイン UI                    | **T-111 完了**                               | Header、`/login`、`/auth/callback`、session cookie client     |
 | 投稿著者をセッションユーザーへ | T-112                                        | `createPost`、`POST /api/posts` の401、固定 `@you` 著者の廃止 |
 | 人間の返信                     | 未着手                                       | `createPost` のparent検証、composerのthread対応               |
 | 非同期AI返信                   | 未着手                                       | `createPost` からqueueへenqueueし、workerでAI moduleを再利用  |

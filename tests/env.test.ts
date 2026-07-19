@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { parsePublicEnv, parseServerEnv } from "@/lib/env";
+import { parsePublicEnv, parseServerEnv, tryParsePublicEnv } from "@/lib/env";
 
 const validServerEnv = {
   NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
   SUPABASE_SERVICE_ROLE_KEY: "service-role-key",
   OPENAI_API_KEY: "openai-api-key",
   OPENAI_MODEL: "gpt-5.6-luna",
@@ -14,6 +15,7 @@ describe("parseServerEnv", () => {
   it("parses valid values and converts AI_REPLIES_ENABLED to boolean", () => {
     expect(parseServerEnv(validServerEnv)).toEqual({
       NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
       SUPABASE_SERVICE_ROLE_KEY: "service-role-key",
       OPENAI_API_KEY: "openai-api-key",
       OPENAI_MODEL: "gpt-5.6-luna",
@@ -46,6 +48,15 @@ describe("parseServerEnv", () => {
     ).toThrow(/NEXT_PUBLIC_SUPABASE_URL/);
   });
 
+  it("rejects empty anon key with the variable name", () => {
+    expect(() =>
+      parseServerEnv({
+        ...validServerEnv,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: "",
+      }),
+    ).toThrow(/NEXT_PUBLIC_SUPABASE_ANON_KEY/);
+  });
+
   it("rejects empty secret values with the variable name", () => {
     expect(() =>
       parseServerEnv({
@@ -66,22 +77,47 @@ describe("parseServerEnv", () => {
 });
 
 describe("parsePublicEnv", () => {
-  it("parses only the public URL", () => {
+  it("parses the public URL and anon key", () => {
     expect(
       parsePublicEnv({
         NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
       }),
     ).toEqual({
       NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
     });
   });
 
   it("does not accept server secrets as part of the public schema", () => {
     const publicEnv = parsePublicEnv({
       NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
     });
 
     expect(publicEnv).not.toHaveProperty("SUPABASE_SERVICE_ROLE_KEY");
     expect(publicEnv).not.toHaveProperty("OPENAI_API_KEY");
+  });
+});
+
+describe("tryParsePublicEnv", () => {
+  it("returns null when the anon key is missing", () => {
+    expect(
+      tryParsePublicEnv({
+        NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+      }),
+    ).toBeNull();
+  });
+
+  it("returns public env when valid", () => {
+    expect(
+      tryParsePublicEnv({
+        NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
+      }),
+    ).toEqual({
+      NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
+    });
   });
 });
