@@ -483,7 +483,7 @@ ADR-006 でログイン方式は固定済みだが、`auth.users` と `profiles`
    - `INSERT` on `posts` → `authenticated`、かつ `author_id = auth.uid()` かつ `parent_post_id is null`
    - `UPDATE` / `DELETE` は作らない
 6. **DB アクセス**: repository は当面 **service role 継続**（AI 返信 insert が Auth ユーザーでないため必須）。RLS は anon key 漏洩時の防御と将来の user-scoped client 用。
-7. **未ログイン**: 閲覧可 / `POST /api/posts` は 401（契約は API.md。実装は T-112）。
+7. **未ログイン**: 閲覧可 / `POST /api/posts` は 401（API.md / T-112）。
 
 詳細は [ARCHITECTURE.md §6.6〜6.7](./ARCHITECTURE.md#66-rlspost-mvp--t-110) と [API.md 認証](./API.md#認証)。
 

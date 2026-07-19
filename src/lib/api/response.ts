@@ -69,6 +69,13 @@ export function validationErrorResponse(
   );
 }
 
+export function unauthorizedErrorResponse(
+  requestId: string,
+  message = "ログインが必要です。",
+): NextResponse {
+  return jsonError(requestId, 401, "UNAUTHORIZED", message);
+}
+
 export function databaseErrorResponse(
   requestId: string,
   message = "データの取得に失敗しました。",

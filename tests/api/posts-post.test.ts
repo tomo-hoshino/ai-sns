@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { POST } from "@/app/api/posts/route";
+import { RepositoryError } from "@/lib/repositories/errors";
 import type { CreatePostResult } from "@/lib/services/create-post";
 import { CreatePostError } from "@/lib/services/errors";
 import {
@@ -14,19 +15,35 @@ import type { CreatePostResponse } from "@/types/api";
 import type { Post } from "@/types/post";
 
 const createPostMock = vi.fn();
+const getSessionUserMock = vi.fn();
+const findHumanAccountByIdMock = vi.fn();
 
 vi.mock("@/lib/services/create-post", () => ({
   createPost: (...args: unknown[]) => createPostMock(...args),
 }));
 
+vi.mock("@/lib/supabase/get-session-user", () => ({
+  getSessionUser: (...args: unknown[]) => getSessionUserMock(...args),
+}));
+
+vi.mock("@/lib/repositories/account-repository", () => ({
+  findHumanAccountById: (...args: unknown[]) =>
+    findHumanAccountByIdMock(...args),
+}));
+
+const sessionUser = {
+  id: "11111111-1111-4111-8111-111111111111",
+  email: "alice@example.com",
+};
+
 const humanAuthor: Account = {
-  id: "00000000-0000-4000-8000-000000000001",
-  handle: "you",
-  displayName: "あなた",
-  bio: "AI社員と一緒に働く人",
+  id: sessionUser.id,
+  handle: "alice",
+  displayName: "Alice",
+  bio: "ログインユーザー",
   accountType: "human",
   personaKey: null,
-  avatarPath: "/avatars/you.png",
+  avatarPath: "/avatars/default-human.png",
 };
 
 const backendAiAuthor: Account = {
@@ -106,6 +123,31 @@ function createPostRequest(
 describe("POST /api/posts", () => {
   beforeEach(() => {
     createPostMock.mockReset();
+    getSessionUserMock.mockReset();
+    findHumanAccountByIdMock.mockReset();
+    getSessionUserMock.mockResolvedValue(sessionUser);
+    findHumanAccountByIdMock.mockResolvedValue(humanAuthor);
+  });
+
+  it("returns 401 UNAUTHORIZED when there is no session", async () => {
+    getSessionUserMock.mockResolvedValue(null);
+
+    const response = await POST(
+      createPostRequest({ content: "今日の進捗を共有します" }),
+    );
+    const body: unknown = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(createPostMock).not.toHaveBeenCalled();
+    expect(findHumanAccountByIdMock).not.toHaveBeenCalled();
+    expect(apiErrorResponseSchema.safeParse(body).success).toBe(true);
+    expect(body).toMatchObject({
+      error: {
+        code: "UNAUTHORIZED",
+        message: "ログインが必要です。",
+      },
+    });
+    expect(typeof (body as { requestId: string }).requestId).toBe("string");
   });
 
   it("returns 201 with aiReplyStatus not_requested when there are no mentions", async () => {
@@ -119,12 +161,15 @@ describe("POST /api/posts", () => {
     expect(response.status).toBe(201);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     expect(createPostResponseSchema.safeParse(body).success).toBe(true);
+    expect(findHumanAccountByIdMock).toHaveBeenCalledWith(sessionUser.id);
     expect(createPostMock).toHaveBeenCalledWith({
       content: "今日の進捗を共有します",
+      author: humanAuthor,
     });
 
     const typed = body as CreatePostResponse;
     expect(typed.data.post.parentPostId).toBeNull();
+    expect(typed.data.post.author.id).toBe(sessionUser.id);
     expect(typed.data.aiReplies).toEqual([]);
     expect(typed.meta).toEqual({
       aiReplyStatus: "not_requested",
@@ -371,24 +416,34 @@ describe("POST /api/posts", () => {
     expect(serialized).not.toContain("secret");
   });
 
-  it("returns 500 INTERNAL_ERROR when the fixed human account is missing", async () => {
-    createPostMock.mockRejectedValue(
-      new CreatePostError(
-        "FIXED_HUMAN_NOT_FOUND",
-        "Fixed human account is missing",
-      ),
-    );
+  it("returns 500 INTERNAL_ERROR when the session user profile is missing", async () => {
+    findHumanAccountByIdMock.mockResolvedValue(null);
 
     const response = await POST(createPostRequest({ content: "設定不整合" }));
     const body: unknown = await response.json();
 
     expect(response.status).toBe(500);
+    expect(createPostMock).not.toHaveBeenCalled();
     expect(body).toMatchObject({
       error: {
         code: "INTERNAL_ERROR",
         message: "サーバーでエラーが発生しました。",
       },
     });
-    expect(JSON.stringify(body)).not.toContain("Fixed human account");
+  });
+
+  it("returns 500 DATABASE_ERROR when the session profile lookup fails", async () => {
+    findHumanAccountByIdMock.mockRejectedValue(
+      new RepositoryError("Failed to load human account"),
+    );
+
+    const response = await POST(createPostRequest({ content: "DB障害" }));
+    const body: unknown = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(createPostMock).not.toHaveBeenCalled();
+    expect(body).toMatchObject({
+      error: { code: "DATABASE_ERROR" },
+    });
   });
 });

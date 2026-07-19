@@ -18,13 +18,13 @@ import type { Account } from "@/types/account";
 import type { Post } from "@/types/post";
 
 const humanAccount: Account = {
-  id: "00000000-0000-4000-8000-000000000001",
-  handle: "you",
-  displayName: "あなた",
-  bio: "AI社員と一緒に働く人",
+  id: "11111111-1111-4111-8111-111111111111",
+  handle: "alice",
+  displayName: "Alice",
+  bio: "ログインユーザー",
   accountType: "human",
   personaKey: null,
-  avatarPath: "/avatars/you.png",
+  avatarPath: "/avatars/default-human.png",
 };
 
 const backendAi: Account = {
@@ -80,15 +80,10 @@ function makeAiReply(author: Account, content: string, id: string): Post {
 
 function createDeps(overrides: Partial<CreatePostDeps> = {}): {
   deps: CreatePostDeps;
-  findFixedHumanAccount: ReturnType<typeof vi.fn>;
   findAiAccounts: ReturnType<typeof vi.fn>;
   insertRootPost: ReturnType<typeof vi.fn>;
   generateAiReplies: ReturnType<typeof vi.fn>;
 } {
-  const findFixedHumanAccount =
-    overrides.findFixedHumanAccount !== undefined
-      ? vi.fn(overrides.findFixedHumanAccount)
-      : vi.fn(async () => humanAccount);
   const findAiAccounts =
     overrides.findAiAccounts !== undefined
       ? vi.fn(overrides.findAiAccounts)
@@ -109,7 +104,6 @@ function createDeps(overrides: Partial<CreatePostDeps> = {}): {
         }));
 
   const deps: CreatePostDeps = {
-    findFixedHumanAccount,
     findAiAccounts,
     insertRootPost,
     generateAiReplies: generateAiRepliesFn,
@@ -117,7 +111,6 @@ function createDeps(overrides: Partial<CreatePostDeps> = {}): {
 
   return {
     deps,
-    findFixedHumanAccount,
     findAiAccounts,
     insertRootPost,
     generateAiReplies: generateAiRepliesFn,
@@ -158,14 +151,17 @@ function createGenerateDeps(
 }
 
 describe("createPost", () => {
-  it("saves a human root post with parentPostId null when mentions are 0", async () => {
+  it("saves a human root post with the session author when mentions are 0", async () => {
     const {
       deps,
       insertRootPost,
       generateAiReplies: generateFn,
     } = createDeps();
 
-    const result = await createPost({ content: "  こんにちは  " }, deps);
+    const result = await createPost(
+      { content: "  こんにちは  ", author: humanAccount },
+      deps,
+    );
 
     expect(insertRootPost).toHaveBeenCalledWith({
       authorId: humanAccount.id,
@@ -196,7 +192,7 @@ describe("createPost", () => {
     });
 
     const result = await createPost(
-      { content: "@sendo-ai 設計を確認して！" },
+      { content: "@sendo-ai 設計を確認して！", author: humanAccount },
       deps,
     );
 
@@ -235,7 +231,10 @@ describe("createPost", () => {
     });
 
     const result = await createPost(
-      { content: "@sendo-ai @hiyori-ai 設計を確認して！" },
+      {
+        content: "@sendo-ai @hiyori-ai 設計を確認して！",
+        author: humanAccount,
+      },
       deps,
     );
 
@@ -262,7 +261,10 @@ describe("createPost", () => {
     });
 
     const result = await createPost(
-      { content: "@sendo-ai @Backend-AI @sendo-ai 確認して" },
+      {
+        content: "@sendo-ai @Backend-AI @sendo-ai 確認して",
+        author: humanAccount,
+      },
       deps,
     );
 
@@ -289,7 +291,7 @@ describe("createPost", () => {
     });
 
     const result = await createPost(
-      { content: "@sendo-ai @hiyori-ai 確認して" },
+      { content: "@sendo-ai @hiyori-ai 確認して", author: humanAccount },
       deps,
     );
 
@@ -316,7 +318,7 @@ describe("createPost", () => {
     });
 
     const result = await createPost(
-      { content: "@sendo-ai @hiyori-ai 確認して" },
+      { content: "@sendo-ai @hiyori-ai 確認して", author: humanAccount },
       deps,
     );
 
@@ -341,7 +343,10 @@ describe("createPost", () => {
       }),
     });
 
-    const result = await createPost({ content: "@sendo-ai 確認して" }, deps);
+    const result = await createPost(
+      { content: "@sendo-ai 確認して", author: humanAccount },
+      deps,
+    );
 
     expect(insertRootPost).toHaveBeenCalledTimes(1);
     expect(result.aiReplyStatus).toBe("disabled");
@@ -351,17 +356,16 @@ describe("createPost", () => {
     expect(result.failedAi).toEqual([]);
   });
 
-  it("throws CreatePostError when the fixed human account is missing", async () => {
-    const { deps, insertRootPost } = createDeps({
-      findFixedHumanAccount: async () => null,
-    });
+  it("throws CreatePostError when the author is not human", async () => {
+    const { deps, insertRootPost } = createDeps();
 
-    const error = await createPost({ content: "投稿" }, deps).catch(
-      (caught: unknown) => caught,
-    );
+    const error = await createPost(
+      { content: "投稿", author: backendAi },
+      deps,
+    ).catch((caught: unknown) => caught);
 
     expect(error).toBeInstanceOf(CreatePostError);
-    expect(error).toMatchObject({ code: "FIXED_HUMAN_NOT_FOUND" });
+    expect(error).toMatchObject({ code: "AUTHOR_NOT_HUMAN" });
     expect(insertRootPost).not.toHaveBeenCalled();
   });
 
@@ -372,9 +376,10 @@ describe("createPost", () => {
       },
     });
 
-    const error = await createPost({ content: "投稿" }, deps).catch(
-      (caught: unknown) => caught,
-    );
+    const error = await createPost(
+      { content: "投稿", author: humanAccount },
+      deps,
+    ).catch((caught: unknown) => caught);
 
     expect(error).toBeInstanceOf(CreatePostError);
     expect(error).toMatchObject({ code: "POST_SAVE_FAILED" });
@@ -382,12 +387,13 @@ describe("createPost", () => {
   });
 
   it("does not call OpenAI or a real database from unit tests", async () => {
-    const { deps, findFixedHumanAccount, findAiAccounts, insertRootPost } =
-      createDeps();
+    const { deps, findAiAccounts, insertRootPost } = createDeps();
 
-    await createPost({ content: "@sendo-ai hello" }, deps);
+    await createPost(
+      { content: "@sendo-ai hello", author: humanAccount },
+      deps,
+    );
 
-    expect(findFixedHumanAccount).toHaveBeenCalledTimes(1);
     expect(findAiAccounts).toHaveBeenCalledTimes(1);
     expect(insertRootPost).toHaveBeenCalledTimes(1);
   });
@@ -402,7 +408,10 @@ describe("createPost", () => {
       generateAiReplies: (input) => generateAiReplies(input, generateDeps),
     });
 
-    const result = await createPost({ content: "@sendo-ai 確認して" }, deps);
+    const result = await createPost(
+      { content: "@sendo-ai 確認して", author: humanAccount },
+      deps,
+    );
 
     expect(insertRootPost).toHaveBeenCalledTimes(1);
     expect(generateDeps.generateReply).toHaveBeenCalledTimes(1);
@@ -466,7 +475,7 @@ describe("generateAiReplies", () => {
       personaKey: "backend",
       rootPost: {
         content: rootPost.content,
-        author: { handle: "you" },
+        author: { handle: "alice" },
       },
       existingReplies: [],
     });

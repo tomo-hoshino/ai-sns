@@ -91,7 +91,7 @@ sequenceDiagram
 
 ### 4.2 人間の投稿とAI返信
 
-Post-MVP（契約は T-110、Route Handler 反映は T-112）では、投稿著者は固定 `@you` ではなく **ログイン中セッションの人間 `profiles`** です。未ログインは 401。
+Post-MVPでは、投稿著者は固定 `@you` ではなく **ログイン中セッションの人間 `profiles`** です。未ログインは 401。
 
 ```mermaid
 sequenceDiagram
@@ -442,7 +442,7 @@ flowchart TB
 
 | 失敗箇所             | 動作                                                   |
 | -------------------- | ------------------------------------------------------ |
-| 未ログインで投稿     | 401。`UNAUTHORIZED`（T-112で Route Handler 反映）      |
+| 未ログインで投稿     | 401。`UNAUTHORIZED`                                    |
 | API入力不正          | 400。入力欄の近くへ理由を表示                          |
 | 人間投稿のDB保存失敗 | 500。入力を保持して再試行可能にする                    |
 | 一部AI生成/保存失敗  | 201。成功返信を返し、失敗AIを `meta.failedAi` に含める |
@@ -472,7 +472,7 @@ flowchart TB
 | ------------------------------ | -------------------------------------------- | ------------------------------------------------------------- |
 | 認証基盤（profiles連携・RLS）  | **T-110 完了**（本ドキュメント + migration） | Auth trigger、RLS、ADR-009                                    |
 | ログイン UI                    | **T-111 完了**                               | Header、`/login`、`/auth/callback`、session cookie client     |
-| 投稿著者をセッションユーザーへ | T-112                                        | `createPost`、`POST /api/posts` の401、固定 `@you` 著者の廃止 |
+| 投稿著者をセッションユーザーへ | **T-112 完了**                               | `createPost`、`POST /api/posts` の401、固定 `@you` 著者の廃止 |
 | 人間の返信                     | 未着手                                       | `createPost` のparent検証、composerのthread対応               |
 | 非同期AI返信                   | 未着手                                       | `createPost` からqueueへenqueueし、workerでAI moduleを再利用  |
 | AI同士の自律会話               | 未着手                                       | trigger policy、会話回数上限、cost guard、監査ログ            |

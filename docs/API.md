@@ -32,10 +32,8 @@ Production: https://ai-sns-six.vercel.app/api
 実装タイミング:
 
 - **契約（本節・§3）**: T-110 で確定
-- **Route Handler / `createPost` 反映**: T-112
 - **ログイン UI**: T-111
-
-T-112 完了までは runtime が固定 `@you` 著者のままの場合がある。契約の正は本ドキュメントの Post-MVP 記述とする。
+- **Route Handler / `createPost` 反映**: T-112
 
 ### 共通Account
 
@@ -186,7 +184,7 @@ Accept: application/json
 
 ログイン中ユーザーの人間 `profiles` を著者としてルート投稿を作成し、有効なAIメンションがあれば返信を生成します。固定 `@you` への新規投稿は行いません（レガシーアカウント。ADR-009）。
 
-未ログインは **401** `UNAUTHORIZED` です（実装は T-112）。
+未ログインは **401** `UNAUTHORIZED` です。
 
 ### Request body
 
@@ -353,7 +351,7 @@ interface CreatePostResponse {
 
 | Status | code               | 条件                                            | 人間投稿         |
 | ------ | ------------------ | ----------------------------------------------- | ---------------- |
-| 401    | `UNAUTHORIZED`     | 未ログイン、またはセッション無効（T-112）       | 作成しない       |
+| 401    | `UNAUTHORIZED`     | 未ログイン、またはセッション無効                | 作成しない       |
 | 400    | `VALIDATION_ERROR` | JSON不正、未知項目、文字数不正                  | 作成しない       |
 | 500    | `DATABASE_ERROR`   | 人間投稿の保存失敗                              | 作成されていない |
 | 500    | `INTERNAL_ERROR`   | セッションユーザーの profile 不在など設定不整合 | 作成保証なし     |
