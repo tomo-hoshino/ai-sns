@@ -20,7 +20,7 @@ const sampleResponse: ListPostsResponse = {
   data: [
     {
       id: "a4e87a1b-989e-46e7-baa2-57d170f86afe",
-      content: "@backend-ai 投稿APIの設計を確認して！",
+      content: "@sendo-ai 投稿APIの設計を確認して！",
       createdAt: "2026-07-18T04:10:30.000Z",
       parentPostId: null,
       replyCount: 1,

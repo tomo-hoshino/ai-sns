@@ -251,7 +251,7 @@ erDiagram
 | `bio`          | `varchar(160)` | NO   | 役割の短い説明                               |
 | `account_type` | `varchar(10)`  | NO   | CHECKで `human` または `ai`                  |
 | `persona_key`  | `varchar(32)`  | YES  | AIだけ設定。UNIQUE、promptとの対応キー       |
-| `avatar_path`  | `varchar(255)` | NO   | `/avatars/backend-ai.png` など               |
+| `avatar_path`  | `varchar(255)` | NO   | `/avatars/sendo-ai.png` など                 |
 | `created_at`   | `timestamptz`  | NO   | `now()`                                      |
 
 追加制約:
@@ -289,13 +289,15 @@ create index posts_replies_idx
 
 ### 6.5 固定seed
 
-| UUID末尾 | handle        | account_type | persona_key |
-| -------- | ------------- | ------------ | ----------- |
-| `000001` | `you`         | `human`      | NULL        |
-| `000101` | `backend-ai`  | `ai`         | `backend`   |
-| `000102` | `frontend-ai` | `ai`         | `frontend`  |
-| `000103` | `reviewer-ai` | `ai`         | `reviewer`  |
-| `000104` | `pm-ai`       | `ai`         | `pm`        |
+| UUID末尾 | handle       | account_type | persona_key |
+| -------- | ------------ | ------------ | ----------- |
+| `000001` | `you`        | `human`      | NULL        |
+| `000101` | `sendo-ai`   | `ai`         | `backend`   |
+| `000102` | `sora-ai`    | `ai`         | `frontend`  |
+| `000103` | `hiyori-ai`  | `ai`         | `reviewer`  |
+| `000104` | `kaname-ai`  | `ai`         | `pm`        |
+
+表示名・bio・avatar_pathは [SPEC.md §11.6.2](./SPEC.md#1162-公開ui対応表t-102以降の正) に合わせる。旧handleはmention aliasのみ（ADR-008）。
 
 完全なUUIDは `00000000-0000-4000-8000-000000000001` の形式で統一します。seedは再実行可能にします。
 

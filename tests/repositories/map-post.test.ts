@@ -21,7 +21,7 @@ const author = {
 
 const postRow = {
   id: "a4e87a1b-989e-46e7-baa2-57d170f86afe",
-  content: "@backend-ai 確認して！",
+  content: "@sendo-ai 確認して！",
   created_at: "2026-07-18T04:10:30.000Z",
   parent_post_id: null,
   author,
@@ -43,7 +43,7 @@ describe("mapPost", () => {
   it("maps snake_case post + author to domain Post", () => {
     expect(mapPost(postRow)).toEqual({
       id: postRow.id,
-      content: "@backend-ai 確認して！",
+      content: "@sendo-ai 確認して！",
       createdAt: "2026-07-18T04:10:30.000Z",
       parentPostId: null,
       author: {

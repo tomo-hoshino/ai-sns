@@ -37,12 +37,12 @@ const humanAuthor: Account = {
 
 const backendAi: Account = {
   id: "00000000-0000-4000-8000-000000000101",
-  handle: "backend-ai",
-  displayName: "Backend AI「バッキー」",
-  bio: "API・DB・セキュリティ担当",
+  handle: "sendo-ai",
+  displayName: "メンターAI「センドウ」",
+  bio: "API・DB・設計の相談役。聞かれたら丁寧に教える",
   accountType: "ai",
   personaKey: "backend",
-  avatarPath: "/avatars/backend-ai.png",
+  avatarPath: "/avatars/sendo-ai.png",
 };
 
 const aiAccounts: readonly Account[] = [backendAi];

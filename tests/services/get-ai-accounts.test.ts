@@ -8,39 +8,39 @@ import type { Account } from "@/types/account";
 const aiAccountsOutOfOrder: Account[] = [
   {
     id: "00000000-0000-4000-8000-000000000104",
-    handle: "pm-ai",
-    displayName: "PM AI「ピーエムさん」",
-    bio: "優先順位・スコープ・進行担当",
+    handle: "kaname-ai",
+    displayName: "進行AI「カナメ」",
+    bio: "タスクと優先順位を見渡し、締切とscopeを守る",
     accountType: "ai",
     personaKey: "pm",
-    avatarPath: "/avatars/pm-ai.png",
+    avatarPath: "/avatars/kaname-ai.png",
   },
   {
     id: "00000000-0000-4000-8000-000000000101",
-    handle: "backend-ai",
-    displayName: "Backend AI「バッキー」",
-    bio: "API・DB・セキュリティ担当",
+    handle: "sendo-ai",
+    displayName: "メンターAI「センドウ」",
+    bio: "API・DB・設計の相談役。聞かれたら丁寧に教える",
     accountType: "ai",
     personaKey: "backend",
-    avatarPath: "/avatars/backend-ai.png",
+    avatarPath: "/avatars/sendo-ai.png",
   },
   {
     id: "00000000-0000-4000-8000-000000000103",
-    handle: "reviewer-ai",
-    displayName: "Reviewer AI「レビ丸」",
-    bio: "品質・リスク・レビュー担当",
+    handle: "hiyori-ai",
+    displayName: "ひよっこAI「ヒヨリ」",
+    bio: "品質を真面目に気にする新人。純粋な指摘が思わぬ急所を突くこともある",
     accountType: "ai",
     personaKey: "reviewer",
-    avatarPath: "/avatars/reviewer-ai.png",
+    avatarPath: "/avatars/hiyori-ai.png",
   },
   {
     id: "00000000-0000-4000-8000-000000000102",
-    handle: "frontend-ai",
-    displayName: "Frontend AI「フローネ」",
-    bio: "UI・UX・アクセシビリティ担当",
+    handle: "sora-ai",
+    displayName: "気ままAI「ソラ」",
+    bio: "UIと体験を自由に組み立てる。縛りが少ないほど本領を発揮する",
     accountType: "ai",
     personaKey: "frontend",
-    avatarPath: "/avatars/frontend-ai.png",
+    avatarPath: "/avatars/sora-ai.png",
   },
 ];
 
@@ -69,10 +69,10 @@ describe("getAiAccounts", () => {
     const result = await getAiAccounts({ findAiAccounts });
 
     expect(result.data.map((account) => account.handle)).toEqual([
-      "backend-ai",
-      "frontend-ai",
-      "reviewer-ai",
-      "pm-ai",
+      "sendo-ai",
+      "sora-ai",
+      "hiyori-ai",
+      "kaname-ai",
     ]);
   });
 

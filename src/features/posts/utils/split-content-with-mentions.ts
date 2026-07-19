@@ -1,3 +1,4 @@
+import { buildAccountsByMentionHandle } from "@/lib/ai/mentions";
 import type { Account } from "@/types/account";
 
 /** SPEC.md 5.2 と同じ候補抽出パターン。 */
@@ -10,15 +11,13 @@ export type TextContentSegment =
 /**
  * 投稿本文を通常テキストと有効AIメンションへ分割する。
  * HTMLは生成せず、描画側はReact textとして扱う。
+ * 旧handle（legacy alias）も正規Accountへ解決して強調する。
  */
 export function splitContentWithMentions(
   content: string,
   aiAccounts: readonly Account[],
 ): TextContentSegment[] {
-  const accountsByHandle = new Map<string, Account>();
-  for (const account of aiAccounts) {
-    accountsByHandle.set(account.handle.toLowerCase(), account);
-  }
+  const accountsByMentionHandle = buildAccountsByMentionHandle(aiAccounts);
 
   const segments: TextContentSegment[] = [];
   let lastIndex = 0;
@@ -34,7 +33,7 @@ export function splitContentWithMentions(
       continue;
     }
 
-    const account = accountsByHandle.get(rawHandle.toLowerCase());
+    const account = accountsByMentionHandle.get(rawHandle.toLowerCase());
     if (account === undefined) {
       continue;
     }

@@ -37,19 +37,19 @@ const humanAuthor: Account = {
 
 const backendAi: Account = {
   id: "00000000-0000-4000-8000-000000000101",
-  handle: "backend-ai",
-  displayName: "Backend AI「バッキー」",
-  bio: "API・DB・セキュリティ担当",
+  handle: "sendo-ai",
+  displayName: "メンターAI「センドウ」",
+  bio: "API・DB・設計の相談役。聞かれたら丁寧に教える",
   accountType: "ai",
   personaKey: "backend",
-  avatarPath: "/avatars/backend-ai.png",
+  avatarPath: "/avatars/sendo-ai.png",
 };
 
 const aiAccounts: readonly Account[] = [backendAi];
 
 const humanPost: Post = {
   id: "11111111-1111-4111-8111-111111111111",
-  content: "@backend-ai と @unknown-ai を確認して",
+  content: "@sendo-ai と @unknown-ai を確認して",
   createdAt: "2026-07-18T10:00:00.000Z",
   parentPostId: null,
   author: humanAuthor,
@@ -100,7 +100,7 @@ describe("PostCard", () => {
       /border-l-ai-backend/,
     );
     expect(
-      screen.getByRole("link", { name: "@backend-aiの投稿の返信を表示" }),
+      screen.getByRole("link", { name: "@sendo-aiの投稿の返信を表示" }),
     ).toHaveAttribute("href", `/posts/${humanPost.id}`);
   });
 
@@ -117,7 +117,7 @@ describe("PostCard", () => {
       return;
     }
 
-    const mention = within(content).getByText("@backend-ai");
+    const mention = within(content).getByText("@sendo-ai");
     expect(mention.className).toMatch(/text-ai-backend/);
     expect(content).toHaveTextContent("@unknown-ai");
     expect(

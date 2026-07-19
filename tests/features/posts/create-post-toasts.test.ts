@@ -33,13 +33,13 @@ describe("getCreatePostSuccessToasts", () => {
     expect(
       getCreatePostSuccessToasts({
         aiReplyStatus: "partial",
-        failedAi: [{ handle: "backend-ai", code: "GENERATION_FAILED" }],
+        failedAi: [{ handle: "sendo-ai", code: "GENERATION_FAILED" }],
       }),
     ).toEqual([
       { tone: "success", message: "投稿しました。" },
       {
         tone: "warning",
-        message: "一部のAI返信に失敗しました（@backend-ai）。",
+        message: "一部のAI返信に失敗しました（@sendo-ai）。",
       },
     ]);
   });
@@ -48,7 +48,7 @@ describe("getCreatePostSuccessToasts", () => {
     expect(
       getCreatePostSuccessToasts({
         aiReplyStatus: "failed",
-        failedAi: [{ handle: "reviewer-ai", code: "REPLY_SAVE_FAILED" }],
+        failedAi: [{ handle: "hiyori-ai", code: "REPLY_SAVE_FAILED" }],
       }),
     ).toEqual([
       { tone: "success", message: "投稿しました。" },

@@ -15,7 +15,7 @@ import { PERSONAS } from "@/lib/ai/personas";
 import { countUnicodeCodePoints } from "@/lib/validations/common";
 
 const rootPost: ReplyPostContext = {
-  content: "@backend-ai API設計を相談したいです。",
+  content: "@sendo-ai API設計を相談したいです。",
   author: { handle: "you" },
 };
 
@@ -34,7 +34,7 @@ describe("buildReplyGenerationInput", () => {
     const input = buildReplyGenerationInput(rootPost, [
       {
         content: "まず要件を整理しましょう。",
-        author: { handle: "pm-ai" },
+        author: { handle: "kaname-ai" },
       },
     ]);
 
@@ -46,7 +46,7 @@ describe("buildReplyGenerationInput", () => {
     expect(input).toContain(`content: ${rootPost.content}`);
     expect(input).toContain("</root_post>");
     expect(input).toContain("<thread_replies>");
-    expect(input).toContain("- @pm-ai: まず要件を整理しましょう。");
+    expect(input).toContain("- @kaname-ai: まず要件を整理しましょう。");
     expect(input).toContain("</thread_replies>");
     expect(input).toContain("上記の投稿へ1件だけ返信してください。");
   });
