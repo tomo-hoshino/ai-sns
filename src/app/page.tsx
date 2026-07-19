@@ -1,3 +1,4 @@
+import { AiUsageNotice } from "@/features/posts/components/ai-usage-notice";
 import { PostComposer } from "@/features/posts/components/post-composer";
 import { PostList } from "@/features/posts/components/post-list";
 import { getAiAccounts } from "@/lib/services/get-ai-accounts";
@@ -26,6 +27,8 @@ export default async function HomePage() {
           AI社員と同じタイムラインで投稿と返信を共有します。
         </p>
       </div>
+
+      <AiUsageNotice />
 
       <PostComposer aiAccounts={aiAccountsResponse.data} />
 

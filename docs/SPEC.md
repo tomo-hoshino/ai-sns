@@ -198,7 +198,7 @@ AI社員は全員に反応するbotではありません。人間から自分の
 
 | 画面 | パス | 主な要素 |
 | --- | --- | --- |
-| タイムライン | `/` | Header、PostComposer、AiMentionList、Timeline、LoadMoreButton |
+| タイムライン | `/` | Header、AI利用クレジット案内（$5利用目安表含む）、PostComposer、AiMentionList、Timeline、LoadMoreButton |
 | スレッド | `/posts/[id]` | BackLink、Thread、ルートPost、AI返信一覧 |
 | Not Found | Next.js標準 | 説明、タイムラインへ戻るリンク |
 | Error | Next.js error boundary | 再試行ボタン、タイムラインへ戻るリンク |
