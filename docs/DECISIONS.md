@@ -12,12 +12,12 @@
 
 ## 判断一覧
 
-| ID | タイトル | Status | 決定日 |
-| --- | --- | --- | --- |
-| ADR-001 | DatabaseにSupabaseを採用する | Accepted | 2026-07-18 |
-| ADR-002 | MVPに認証を入れない | Accepted | 2026-07-18 |
+| ID      | タイトル                               | Status   | 決定日     |
+| ------- | -------------------------------------- | -------- | ---------- |
+| ADR-001 | DatabaseにSupabaseを採用する           | Accepted | 2026-07-18 |
+| ADR-002 | MVPに認証を入れない                    | Accepted | 2026-07-18 |
 | ADR-003 | AI返信にOpenAI Responses APIを採用する | Accepted | 2026-07-18 |
-| ADR-004 | 人間投稿とAI返信を300文字に制限する | Accepted | 2026-07-18 |
+| ADR-004 | 人間投稿とAI返信を300文字に制限する    | Accepted | 2026-07-18 |
 
 ---
 
@@ -59,12 +59,12 @@ Supabaseのmanaged PostgreSQLを採用します。Next.jsのサーバー専用re
 
 ### Rejected alternatives
 
-| 代替 | 見送った理由 |
-| --- | --- |
-| Vercel Postgres等の別managed DB | 将来のAuth/RLSまで含めた一体性が今回の構想に合う |
-| Firebase / Firestore | thread、FK、集計をrelationalに扱う方が単純 |
-| SQLite | Vercelのserverless filesystemで永続DBとして扱えない |
-| Prisma追加 | 2テーブルMVPに対して生成・設定・抽象化が増える |
+| 代替                            | 見送った理由                                        |
+| ------------------------------- | --------------------------------------------------- |
+| Vercel Postgres等の別managed DB | 将来のAuth/RLSまで含めた一体性が今回の構想に合う    |
+| Firebase / Firestore            | thread、FK、集計をrelationalに扱う方が単純          |
+| SQLite                          | Vercelのserverless filesystemで永続DBとして扱えない |
+| Prisma追加                      | 2テーブルMVPに対して生成・設定・抽象化が増える      |
 
 ---
 
@@ -121,11 +121,11 @@ MVPでの緩和策:
 
 ### Rejected alternatives
 
-| 代替 | 見送った理由 |
-| --- | --- |
-| Supabase Authを最初から実装 | 価値検証に直接必要なく、3日間のscopeを圧迫する |
-| ブラウザlocal ID | 本人性を保証せず、後のAuth移行にも大きな利点がない |
-| Basic認証 | アプリのユーザー概念とは別物で、Vercel設定も含め追加作業になる |
+| 代替                        | 見送った理由                                                   |
+| --------------------------- | -------------------------------------------------------------- |
+| Supabase Authを最初から実装 | 価値検証に直接必要なく、3日間のscopeを圧迫する                 |
+| ブラウザlocal ID            | 本人性を保証せず、後のAuth移行にも大きな利点がない             |
+| Basic認証                   | アプリのユーザー概念とは別物で、Vercel設定も含め追加作業になる |
 
 ---
 
@@ -189,12 +189,12 @@ Accepted
 
 ### Rejected alternatives
 
-| 代替 | 見送った理由 |
-| --- | --- |
+| 代替                 | 見送った理由                                      |
+| -------------------- | ------------------------------------------------- |
 | Chat Completions API | 利用可能だが、新規実装ではResponses APIを優先する |
-| 複数LLM provider対応 | MVPで使わないinterface・設定・testが増える |
-| self-hosted model | 3日でinfraと品質調整を行うのは不合理 |
-| モック返信だけ | conceptの核心である人格付き生成を検証できない |
+| 複数LLM provider対応 | MVPで使わないinterface・設定・testが増える        |
+| self-hosted model    | 3日でinfraと品質調整を行うのは不合理              |
+| モック返信だけ       | conceptの核心である人格付き生成を検証できない     |
 
 ---
 
@@ -243,9 +243,9 @@ MVPでは `Intl.Segmenter` を使ったgrapheme完全対応やURL短縮ルール
 
 ### Rejected alternatives
 
-| 代替 | 見送った理由 |
-| --- | --- |
-| 280文字 | X固有の文字count互換を期待させ、要件が増える |
-| 500文字 | timelineの一覧性とAI costの予測性が下がる |
-| 人間とAIで別上限 | UI、DB、testの条件分岐が増える |
-| 上限なし | abuse、cost、表示崩れのriskが高い |
+| 代替             | 見送った理由                                 |
+| ---------------- | -------------------------------------------- |
+| 280文字          | X固有の文字count互換を期待させ、要件が増える |
+| 500文字          | timelineの一覧性とAI costの予測性が下がる    |
+| 人間とAIで別上限 | UI、DB、testの条件分岐が増える               |
+| 上限なし         | abuse、cost、表示崩れのriskが高い            |

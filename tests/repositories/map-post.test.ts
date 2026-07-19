@@ -6,6 +6,7 @@ import {
   mapPostFromUnknown,
   mapTimelinePost,
   mapTimelinePostFromUnknown,
+  toUtcIsoDateTime,
 } from "@/lib/repositories/map-post";
 
 const author = {
@@ -26,6 +27,18 @@ const postRow = {
   author,
 };
 
+describe("toUtcIsoDateTime", () => {
+  it("normalizes PostgREST offset timestamps to UTC Z", () => {
+    expect(toUtcIsoDateTime("2026-07-18T04:10:30.123456+00:00")).toBe(
+      "2026-07-18T04:10:30.123Z",
+    );
+  });
+
+  it("rejects unparseable values", () => {
+    expect(() => toUtcIsoDateTime("not-a-date")).toThrow(RepositoryError);
+  });
+});
+
 describe("mapPost", () => {
   it("maps snake_case post + author to domain Post", () => {
     expect(mapPost(postRow)).toEqual({
@@ -43,6 +56,14 @@ describe("mapPost", () => {
         avatarPath: "/avatars/you.png",
       },
     });
+  });
+
+  it("normalizes Supabase created_at into API UTC ISO", () => {
+    const mapped = mapPost({
+      ...postRow,
+      created_at: "2026-07-18T04:10:30.123456+00:00",
+    });
+    expect(mapped.createdAt).toBe("2026-07-18T04:10:30.123Z");
   });
 
   it("preserves parentPostId for replies", () => {

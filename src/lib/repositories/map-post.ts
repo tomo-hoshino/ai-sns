@@ -74,13 +74,25 @@ export function isTimelinePostRow(
 }
 
 /**
+ * PostgREST returns timestamptz as offset ISO (often +00:00, microsecond
+ * precision). API.md requires UTC ISO 8601 with Z for createdAt.
+ */
+export function toUtcIsoDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new RepositoryError("Invalid created_at from database");
+  }
+  return date.toISOString();
+}
+
+/**
  * Maps a posts DB row with joined author to the Post domain type.
  */
 export function mapPost(row: PostRowInput): Post {
   return {
     id: row.id,
     content: row.content,
-    createdAt: row.created_at,
+    createdAt: toUtcIsoDateTime(row.created_at),
     parentPostId: row.parent_post_id,
     author: mapAccount(row.author),
   };

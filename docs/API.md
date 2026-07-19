@@ -97,10 +97,10 @@ interface ApiErrorResponse {
 
 ### Query Parameters
 
-| 名前 | 型 | 必須 | Default | 制約 |
-| --- | --- | --- | --- | --- |
-| `limit` | integer | No | `20` | 1〜50 |
-| `cursor` | string | No | - | 直前レスポンスの `nextCursor` をそのまま指定 |
+| 名前     | 型      | 必須 | Default | 制約                                         |
+| -------- | ------- | ---- | ------- | -------------------------------------------- |
+| `limit`  | integer | No   | `20`    | 1〜50                                        |
+| `cursor` | string  | No   | -       | 直前レスポンスの `nextCursor` をそのまま指定 |
 
 `cursor` はサーバーが発行するopaqueなbase64url文字列です。クライアントは解析・生成・改変しません。内部には最後のPostの `createdAt` と `id` を含めます。
 
@@ -155,10 +155,10 @@ Accept: application/json
 
 ### Errors
 
-| Status | code | 条件 |
-| --- | --- | --- |
-| 400 | `VALIDATION_ERROR` | limitまたはcursorが不正 |
-| 500 | `DATABASE_ERROR` | DB取得失敗 |
+| Status | code               | 条件                    |
+| ------ | ------------------ | ----------------------- |
+| 400    | `VALIDATION_ERROR` | limitまたはcursorが不正 |
+| 500    | `DATABASE_ERROR`   | DB取得失敗              |
 
 ## 3. `POST /api/posts`
 
@@ -172,9 +172,9 @@ interface CreatePostRequest {
 }
 ```
 
-| 項目 | 必須 | 制約 |
-| --- | --- | --- |
-| `content` | Yes | trim後1〜300文字 |
+| 項目      | 必須 | 制約             |
+| --------- | ---- | ---------------- |
+| `content` | Yes  | trim後1〜300文字 |
 
 未知のプロパティは無視せず、Zodのstrict objectで拒否します。
 
@@ -194,11 +194,7 @@ Content-Type: application/json
 
 ```ts
 type AiReplyStatus =
-  | "not_requested"
-  | "completed"
-  | "partial"
-  | "failed"
-  | "disabled";
+  "not_requested" | "completed" | "partial" | "failed" | "disabled";
 
 interface CreatePostResponse {
   data: {
@@ -318,21 +314,21 @@ interface CreatePostResponse {
 
 ### `aiReplyStatus` 判定
 
-| 値 | 条件 |
-| --- | --- |
-| `not_requested` | 有効AIメンションが0件 |
-| `completed` | 対象AIが1件以上で、すべて成功 |
-| `partial` | 成功と失敗が両方ある |
-| `failed` | 対象AIが1件以上で、すべて失敗 |
-| `disabled` | 対象AIはいるが `AI_REPLIES_ENABLED=false` |
+| 値              | 条件                                      |
+| --------------- | ----------------------------------------- |
+| `not_requested` | 有効AIメンションが0件                     |
+| `completed`     | 対象AIが1件以上で、すべて成功             |
+| `partial`       | 成功と失敗が両方ある                      |
+| `failed`        | 対象AIが1件以上で、すべて失敗             |
+| `disabled`      | 対象AIはいるが `AI_REPLIES_ENABLED=false` |
 
 ### Errors
 
-| Status | code | 条件 | 人間投稿 |
-| --- | --- | --- | --- |
-| 400 | `VALIDATION_ERROR` | JSON不正、未知項目、文字数不正 | 作成しない |
-| 500 | `DATABASE_ERROR` | 人間投稿の保存失敗 | 作成されていない |
-| 500 | `INTERNAL_ERROR` | 固定アカウント不在など設定不整合 | 作成保証なし |
+| Status | code               | 条件                             | 人間投稿         |
+| ------ | ------------------ | -------------------------------- | ---------------- |
+| 400    | `VALIDATION_ERROR` | JSON不正、未知項目、文字数不正   | 作成しない       |
+| 500    | `DATABASE_ERROR`   | 人間投稿の保存失敗               | 作成されていない |
+| 500    | `INTERNAL_ERROR`   | 固定アカウント不在など設定不整合 | 作成保証なし     |
 
 AI生成・AI返信保存の失敗は共通エラーへせず、201の `meta.failedAi` へ含めます。
 
@@ -342,9 +338,9 @@ AI生成・AI返信保存の失敗は共通エラーへせず、201の `meta.fai
 
 ### Path Parameters
 
-| 名前 | 型 | 必須 | 制約 |
-| --- | --- | --- | --- |
-| `id` | UUID | Yes | `parentPostId = null` のPost ID |
+| 名前 | 型   | 必須 | 制約                            |
+| ---- | ---- | ---- | ------------------------------- |
+| `id` | UUID | Yes  | `parentPostId = null` のPost ID |
 
 ### Request example
 
@@ -397,11 +393,11 @@ Accept: application/json
 
 ### Errors
 
-| Status | code | 条件 |
-| --- | --- | --- |
-| 400 | `VALIDATION_ERROR` | idがUUIDでない |
-| 404 | `THREAD_NOT_FOUND` | ルート投稿が存在しない、または返信IDを指定 |
-| 500 | `DATABASE_ERROR` | DB取得失敗 |
+| Status | code               | 条件                                       |
+| ------ | ------------------ | ------------------------------------------ |
+| 400    | `VALIDATION_ERROR` | idがUUIDでない                             |
+| 404    | `THREAD_NOT_FOUND` | ルート投稿が存在しない、または返信IDを指定 |
+| 500    | `DATABASE_ERROR`   | DB取得失敗                                 |
 
 404例:
 
@@ -476,9 +472,9 @@ Accept: application/json
 
 ### Errors
 
-| Status | code | 条件 |
-| --- | --- | --- |
-| 500 | `DATABASE_ERROR` | DB取得失敗 |
+| Status | code             | 条件       |
+| ------ | ---------------- | ---------- |
+| 500    | `DATABASE_ERROR` | DB取得失敗 |
 
 ## 6. CORS・Cache・Rate Limit
 
