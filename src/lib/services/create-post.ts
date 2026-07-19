@@ -1,18 +1,25 @@
 import "server-only";
 
+import {
+  generateReply,
+  type GenerateReplyInput,
+} from "@/lib/ai/generate-reply";
 import { extractMentionedAiAccounts } from "@/lib/ai/mentions";
+import { getEnv } from "@/lib/env";
 import {
   findAiAccounts,
   findFixedHumanAccount,
 } from "@/lib/repositories/account-repository";
 import { RepositoryError } from "@/lib/repositories/errors";
 import {
+  insertAiReply,
   insertRootPost,
+  type InsertAiReplyInput,
   type InsertRootPostInput,
 } from "@/lib/repositories/post-repository";
 import { CreatePostError } from "@/lib/services/errors";
 import type { Account } from "@/types/account";
-import type { AiReplyStatus, FailedAi } from "@/types/api";
+import type { AiReplyStatus, FailedAi, FailedAiCode } from "@/types/api";
 import type { Post } from "@/types/post";
 
 export type CreatePostInput = {
@@ -20,10 +27,6 @@ export type CreatePostInput = {
   content: string;
 };
 
-/**
- * AI reply generation hook for T-025.
- * T-013 only declares the type; default createPost does not call it.
- */
 export type GenerateAiRepliesInput = {
   rootPost: Post;
   mentionedAiAccounts: readonly Account[];
@@ -41,11 +44,17 @@ export type GenerateAiReplies = (
   input: GenerateAiRepliesInput,
 ) => Promise<GenerateAiRepliesResult>;
 
+export type GenerateAiRepliesDeps = {
+  isAiRepliesEnabled: () => boolean;
+  generateReply: (input: GenerateReplyInput) => Promise<string>;
+  insertAiReply: (input: InsertAiReplyInput) => Promise<Post>;
+};
+
 export type CreatePostDeps = {
   findFixedHumanAccount: () => Promise<Account | null>;
   findAiAccounts: () => Promise<Account[]>;
   insertRootPost: (input: InsertRootPostInput) => Promise<Post>;
-  generateAiReplies?: GenerateAiReplies;
+  generateAiReplies: GenerateAiReplies;
 };
 
 export type CreatePostResult = {
@@ -57,15 +66,48 @@ export type CreatePostResult = {
   failedAi: FailedAi[];
 };
 
+const defaultGenerateAiRepliesDeps: GenerateAiRepliesDeps = {
+  isAiRepliesEnabled: () => getEnv().AI_REPLIES_ENABLED,
+  generateReply,
+  insertAiReply,
+};
+
+/**
+ * Generate and persist one reply per mentioned AI.
+ * Failures are isolated; AI reply content is never re-parsed for mentions.
+ */
+export async function generateAiReplies(
+  input: GenerateAiRepliesInput,
+  deps: GenerateAiRepliesDeps = defaultGenerateAiRepliesDeps,
+): Promise<GenerateAiRepliesResult> {
+  if (!deps.isAiRepliesEnabled()) {
+    return {
+      aiReplies: [],
+      succeededAiHandles: [],
+      failedAi: [],
+      disabled: true,
+    };
+  }
+
+  const settled = await Promise.allSettled(
+    input.mentionedAiAccounts.map((account) =>
+      generateAndSaveAiReply(account, input.rootPost, deps),
+    ),
+  );
+
+  return collectAiReplyResults(input.mentionedAiAccounts, settled);
+}
+
 const defaultDeps: CreatePostDeps = {
   findFixedHumanAccount,
   findAiAccounts,
   insertRootPost,
+  generateAiReplies,
 };
 
 /**
- * Creates a human root post and extracts valid AI mentions.
- * AI reply generation is optional via deps.generateAiReplies (wired in T-025).
+ * Creates a human root post, then generates AI replies for valid mentions.
+ * Human posts are never rolled back when AI generation or reply save fails.
  */
 export async function createPost(
   input: CreatePostInput,
@@ -98,18 +140,6 @@ export async function createPost(
     };
   }
 
-  if (deps.generateAiReplies === undefined) {
-    // T-013: extract mentions only; AI generation is connected in T-025.
-    return {
-      post,
-      aiReplies: [],
-      aiReplyStatus: "not_requested",
-      mentionedAiHandles,
-      succeededAiHandles: [],
-      failedAi: [],
-    };
-  }
-
   const generated = await deps.generateAiReplies({
     rootPost: post,
     mentionedAiAccounts,
@@ -131,7 +161,7 @@ export async function createPost(
 }
 
 async function saveRootPost(
-  deps: CreatePostDeps,
+  deps: Pick<CreatePostDeps, "insertRootPost">,
   authorId: string,
   content: string,
 ): Promise<Post> {
@@ -168,6 +198,78 @@ async function saveRootPost(
   }
 }
 
+async function generateAndSaveAiReply(
+  account: Account,
+  rootPost: Post,
+  deps: GenerateAiRepliesDeps,
+): Promise<Post> {
+  if (account.personaKey === null) {
+    throw new AiReplyAttemptError("GENERATION_FAILED");
+  }
+
+  let content: string;
+  try {
+    content = await deps.generateReply({
+      personaKey: account.personaKey,
+      rootPost: {
+        content: rootPost.content,
+        author: { handle: rootPost.author.handle },
+      },
+      // First-wave replies run in parallel; sibling AI replies are not context.
+      existingReplies: [],
+    });
+  } catch (error: unknown) {
+    throw new AiReplyAttemptError("GENERATION_FAILED", { cause: error });
+  }
+
+  try {
+    return await deps.insertAiReply({
+      authorId: account.id,
+      parentPostId: rootPost.id,
+      content,
+    });
+  } catch (error: unknown) {
+    throw new AiReplyAttemptError("REPLY_SAVE_FAILED", { cause: error });
+  }
+}
+
+function collectAiReplyResults(
+  mentionedAiAccounts: readonly Account[],
+  settled: readonly PromiseSettledResult<Post>[],
+): GenerateAiRepliesResult {
+  const aiReplies: Post[] = [];
+  const succeededAiHandles: string[] = [];
+  const failedAi: FailedAi[] = [];
+
+  for (const [index, result] of settled.entries()) {
+    const account = mentionedAiAccounts[index];
+    if (account === undefined) {
+      continue;
+    }
+
+    if (result.status === "fulfilled") {
+      aiReplies.push(result.value);
+      succeededAiHandles.push(account.handle);
+      continue;
+    }
+
+    failedAi.push({
+      handle: account.handle,
+      code: failedAiCodeFromReason(result.reason),
+    });
+  }
+
+  return { aiReplies, succeededAiHandles, failedAi };
+}
+
+function failedAiCodeFromReason(reason: unknown): FailedAiCode {
+  if (reason instanceof AiReplyAttemptError) {
+    return reason.code;
+  }
+
+  return "GENERATION_FAILED";
+}
+
 function resolveAiReplyStatus(params: {
   mentionedCount: number;
   succeededCount: number;
@@ -194,4 +296,14 @@ function resolveAiReplyStatus(params: {
   }
 
   return "partial";
+}
+
+class AiReplyAttemptError extends Error {
+  readonly name = "AiReplyAttemptError";
+  readonly code: FailedAiCode;
+
+  constructor(code: FailedAiCode, options?: { cause?: unknown }) {
+    super(`AI reply attempt failed: ${code}`, options);
+    this.code = code;
+  }
 }
