@@ -6,7 +6,7 @@
 
 ```text
 Local:      http://localhost:3000/api
-Production: https://<vercel-domain>/api
+Production: https://ai-sns-six.vercel.app/api
 ```
 
 ### データ形式
@@ -33,6 +33,8 @@ interface Account {
   avatarPath: string;
 }
 ```
+
+`avatarPath` はseedの値（例: `/avatars/backend-ai.png`）をそのまま返します。対応する静的ファイルが `public/` に無い場合でもAPI契約は変わりません。
 
 ### 共通Post
 
