@@ -29,12 +29,53 @@ const humanAuthor: Account = {
   avatarPath: "/avatars/you.png",
 };
 
+const backendAiAuthor: Account = {
+  id: "00000000-0000-4000-8000-000000000101",
+  handle: "backend-ai",
+  displayName: "Backend AI「バッキー」",
+  bio: "API・DB・セキュリティ担当",
+  accountType: "ai",
+  personaKey: "backend",
+  avatarPath: "/avatars/backend-ai.png",
+};
+
+const reviewerAiAuthor: Account = {
+  id: "00000000-0000-4000-8000-000000000103",
+  handle: "reviewer-ai",
+  displayName: "Reviewer AI「レビ丸」",
+  bio: "品質・リスク・レビュー担当",
+  accountType: "ai",
+  personaKey: "reviewer",
+  avatarPath: "/avatars/reviewer-ai.png",
+};
+
 const rootPost: Post = {
   id: "a4e87a1b-989e-46e7-baa2-57d170f86afe",
   content: "今日の進捗を共有します",
   createdAt: "2026-07-18T04:10:30.000Z",
   parentPostId: null,
   author: humanAuthor,
+};
+
+const mentionedRootPost: Post = {
+  ...rootPost,
+  content: "@backend-ai @reviewer-ai 投稿APIの設計を確認して！",
+};
+
+const backendAiReply: Post = {
+  id: "71fcb253-af1e-4a80-847a-f3518bc78bf1",
+  content: "結論、入力検証とDB保存を先に固めましょう。",
+  createdAt: "2026-07-18T04:10:32.000Z",
+  parentPostId: rootPost.id,
+  author: backendAiAuthor,
+};
+
+const reviewerAiReply: Post = {
+  id: "96fda302-c7d1-408d-8899-a8d67ac58fe0",
+  content: "気になるのは部分失敗時の契約です。",
+  createdAt: "2026-07-18T04:10:33.000Z",
+  parentPostId: rootPost.id,
+  author: reviewerAiAuthor,
 };
 
 const successResult: CreatePostResult = {
@@ -92,6 +133,133 @@ describe("POST /api/posts", () => {
       failedAi: [],
     });
     expect(typeof typed.requestId).toBe("string");
+  });
+
+  it("returns 201 with aiReplyStatus completed when all AI replies succeed", async () => {
+    createPostMock.mockResolvedValue({
+      post: mentionedRootPost,
+      aiReplies: [backendAiReply, reviewerAiReply],
+      aiReplyStatus: "completed",
+      mentionedAiHandles: ["backend-ai", "reviewer-ai"],
+      succeededAiHandles: ["backend-ai", "reviewer-ai"],
+      failedAi: [],
+    } satisfies CreatePostResult);
+
+    const response = await POST(
+      createPostRequest({
+        content: "@backend-ai @reviewer-ai 投稿APIの設計を確認して！",
+      }),
+    );
+    const body: unknown = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(createPostResponseSchema.safeParse(body).success).toBe(true);
+
+    const typed = body as CreatePostResponse;
+    expect(typed.data.aiReplies).toHaveLength(2);
+    expect(typed.meta).toEqual({
+      aiReplyStatus: "completed",
+      mentionedAiHandles: ["backend-ai", "reviewer-ai"],
+      succeededAiHandles: ["backend-ai", "reviewer-ai"],
+      failedAi: [],
+    });
+  });
+
+  it("returns 201 with aiReplyStatus partial when some AI replies fail", async () => {
+    createPostMock.mockResolvedValue({
+      post: mentionedRootPost,
+      aiReplies: [reviewerAiReply],
+      aiReplyStatus: "partial",
+      mentionedAiHandles: ["backend-ai", "reviewer-ai"],
+      succeededAiHandles: ["reviewer-ai"],
+      failedAi: [{ handle: "backend-ai", code: "GENERATION_FAILED" }],
+    } satisfies CreatePostResult);
+
+    const response = await POST(
+      createPostRequest({
+        content: "@backend-ai @reviewer-ai 投稿APIの設計を確認して！",
+      }),
+    );
+    const body: unknown = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(createPostResponseSchema.safeParse(body).success).toBe(true);
+
+    const typed = body as CreatePostResponse;
+    expect(typed.data.aiReplies).toEqual([reviewerAiReply]);
+    expect(typed.meta).toEqual({
+      aiReplyStatus: "partial",
+      mentionedAiHandles: ["backend-ai", "reviewer-ai"],
+      succeededAiHandles: ["reviewer-ai"],
+      failedAi: [{ handle: "backend-ai", code: "GENERATION_FAILED" }],
+    });
+  });
+
+  it("returns 201 with aiReplyStatus failed when all AI replies fail", async () => {
+    createPostMock.mockResolvedValue({
+      post: mentionedRootPost,
+      aiReplies: [],
+      aiReplyStatus: "failed",
+      mentionedAiHandles: ["backend-ai", "reviewer-ai"],
+      succeededAiHandles: [],
+      failedAi: [
+        { handle: "backend-ai", code: "GENERATION_FAILED" },
+        { handle: "reviewer-ai", code: "GENERATION_FAILED" },
+      ],
+    } satisfies CreatePostResult);
+
+    const response = await POST(
+      createPostRequest({
+        content: "@backend-ai @reviewer-ai 投稿APIの設計を確認して！",
+      }),
+    );
+    const body: unknown = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(createPostResponseSchema.safeParse(body).success).toBe(true);
+
+    const typed = body as CreatePostResponse;
+    expect(typed.data.aiReplies).toEqual([]);
+    expect(typed.meta).toEqual({
+      aiReplyStatus: "failed",
+      mentionedAiHandles: ["backend-ai", "reviewer-ai"],
+      succeededAiHandles: [],
+      failedAi: [
+        { handle: "backend-ai", code: "GENERATION_FAILED" },
+        { handle: "reviewer-ai", code: "GENERATION_FAILED" },
+      ],
+    });
+  });
+
+  it("returns 201 with aiReplyStatus disabled when AI replies are turned off", async () => {
+    createPostMock.mockResolvedValue({
+      post: {
+        ...rootPost,
+        content: "@backend-ai 確認して",
+      },
+      aiReplies: [],
+      aiReplyStatus: "disabled",
+      mentionedAiHandles: ["backend-ai"],
+      succeededAiHandles: [],
+      failedAi: [],
+    } satisfies CreatePostResult);
+
+    const response = await POST(
+      createPostRequest({ content: "@backend-ai 確認して" }),
+    );
+    const body: unknown = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(createPostResponseSchema.safeParse(body).success).toBe(true);
+
+    const typed = body as CreatePostResponse;
+    expect(typed.data.aiReplies).toEqual([]);
+    expect(typed.meta).toEqual({
+      aiReplyStatus: "disabled",
+      mentionedAiHandles: ["backend-ai"],
+      succeededAiHandles: [],
+      failedAi: [],
+    });
   });
 
   it("returns 400 VALIDATION_ERROR for empty content", async () => {
