@@ -34,7 +34,7 @@ interface Account {
 }
 ```
 
-`avatarPath` はseedの値（例: `/avatars/sendo-ai.png`）をそのまま返します。対応する静的ファイルが `public/` に無い場合でもAPI契約は変わりません。
+`avatarPath` はseedの値（例: `/avatars/sendo-ai.png`）をそのまま返します。対応する静的ファイルは `public/avatars/` に同梱します（T-103）。
 
 ### 共通Post
 
