@@ -15,12 +15,12 @@ const humanAuthor = {
 
 const aiAuthor = {
   id: "00000000-0000-4000-8000-000000000101",
-  handle: "backend-ai",
-  displayName: "Backend AI「バッキー」",
-  bio: "API・DB・セキュリティ担当",
+  handle: "sendo-ai",
+  displayName: "メンターAI「センドウ」",
+  bio: "API・DB・設計の相談役。聞かれたら丁寧に教える",
   accountType: "ai" as const,
   personaKey: "backend" as const,
-  avatarPath: "/avatars/backend-ai.png",
+  avatarPath: "/avatars/sendo-ai.png",
 };
 
 const rootPostId = "a4e87a1b-989e-46e7-baa2-57d170f86afe";
@@ -28,7 +28,7 @@ const rootPostId = "a4e87a1b-989e-46e7-baa2-57d170f86afe";
 function makeRootPost(overrides?: Partial<Post>): Post {
   return {
     id: rootPostId,
-    content: "@backend-ai 投稿APIの設計を確認して！",
+    content: "@sendo-ai 投稿APIの設計を確認して！",
     createdAt: "2026-07-18T04:10:30.000Z",
     parentPostId: null,
     author: humanAuthor,
@@ -62,10 +62,10 @@ describe("getThread", () => {
         author: {
           ...aiAuthor,
           id: "00000000-0000-4000-8000-000000000102",
-          handle: "frontend-ai",
-          displayName: "Frontend AI「フローネ」",
+          handle: "sora-ai",
+          displayName: "気ままAI「ソラ」",
           personaKey: "frontend",
-          avatarPath: "/avatars/frontend-ai.png",
+          avatarPath: "/avatars/sora-ai.png",
         },
       }),
     ];

@@ -37,29 +37,29 @@ const humanAuthor: Account = {
 
 const backendAi: Account = {
   id: "00000000-0000-4000-8000-000000000101",
-  handle: "backend-ai",
-  displayName: "Backend AI「バッキー」",
-  bio: "API・DB・セキュリティ担当",
+  handle: "sendo-ai",
+  displayName: "メンターAI「センドウ」",
+  bio: "API・DB・設計の相談役。聞かれたら丁寧に教える",
   accountType: "ai",
   personaKey: "backend",
-  avatarPath: "/avatars/backend-ai.png",
+  avatarPath: "/avatars/sendo-ai.png",
 };
 
 const reviewerAi: Account = {
   id: "00000000-0000-4000-8000-000000000102",
-  handle: "reviewer-ai",
+  handle: "hiyori-ai",
   displayName: "Reviewer AI「レビィ」",
   bio: "レビュー担当",
   accountType: "ai",
   personaKey: "reviewer",
-  avatarPath: "/avatars/reviewer-ai.png",
+  avatarPath: "/avatars/hiyori-ai.png",
 };
 
 const aiAccounts: readonly Account[] = [backendAi, reviewerAi];
 
 const rootPost: Post = {
   id: "11111111-1111-4111-8111-111111111111",
-  content: "@backend-ai 確認をお願いします",
+  content: "@sendo-ai 確認をお願いします",
   createdAt: "2026-07-18T10:00:00.000Z",
   parentPostId: null,
   author: humanAuthor,

@@ -29,32 +29,32 @@ const humanAccount: Account = {
 
 const backendAi: Account = {
   id: "00000000-0000-4000-8000-000000000101",
-  handle: "backend-ai",
-  displayName: "Backend AI「バッキー」",
-  bio: "API・DB・セキュリティ担当",
+  handle: "sendo-ai",
+  displayName: "メンターAI「センドウ」",
+  bio: "API・DB・設計の相談役。聞かれたら丁寧に教える",
   accountType: "ai",
   personaKey: "backend",
-  avatarPath: "/avatars/backend-ai.png",
+  avatarPath: "/avatars/sendo-ai.png",
 };
 
 const reviewerAi: Account = {
   id: "00000000-0000-4000-8000-000000000103",
-  handle: "reviewer-ai",
-  displayName: "Reviewer AI「レビ丸」",
-  bio: "品質・リスク・レビュー担当",
+  handle: "hiyori-ai",
+  displayName: "ひよっこAI「ヒヨリ」",
+  bio: "品質を真面目に気にする新人。純粋な指摘が思わぬ急所を突くこともある",
   accountType: "ai",
   personaKey: "reviewer",
-  avatarPath: "/avatars/reviewer-ai.png",
+  avatarPath: "/avatars/hiyori-ai.png",
 };
 
 const frontendAi: Account = {
   id: "00000000-0000-4000-8000-000000000102",
-  handle: "frontend-ai",
+  handle: "sora-ai",
   displayName: "Frontend AI「フロン」",
   bio: "UI・UX担当",
   accountType: "ai",
   personaKey: "frontend",
-  avatarPath: "/avatars/frontend-ai.png",
+  avatarPath: "/avatars/sora-ai.png",
 };
 
 function makeRootPost(overrides?: Partial<Post>): Post {
@@ -190,13 +190,13 @@ describe("createPost", () => {
     const { deps, generateAiReplies: generateFn } = createDeps({
       generateAiReplies: async () => ({
         aiReplies: [aiReply],
-        succeededAiHandles: ["backend-ai"],
+        succeededAiHandles: ["sendo-ai"],
         failedAi: [],
       }),
     });
 
     const result = await createPost(
-      { content: "@backend-ai 設計を確認して！" },
+      { content: "@sendo-ai 設計を確認して！" },
       deps,
     );
 
@@ -204,14 +204,14 @@ describe("createPost", () => {
     expect(generateFn).toHaveBeenCalledWith({
       rootPost: expect.objectContaining({
         parentPostId: null,
-        content: "@backend-ai 設計を確認して！",
+        content: "@sendo-ai 設計を確認して！",
       }),
       mentionedAiAccounts: [backendAi],
     });
     expect(result.aiReplyStatus).toBe("completed");
     expect(result.aiReplies).toEqual([aiReply]);
-    expect(result.mentionedAiHandles).toEqual(["backend-ai"]);
-    expect(result.succeededAiHandles).toEqual(["backend-ai"]);
+    expect(result.mentionedAiHandles).toEqual(["sendo-ai"]);
+    expect(result.succeededAiHandles).toEqual(["sendo-ai"]);
     expect(result.failedAi).toEqual([]);
   });
 
@@ -229,19 +229,19 @@ describe("createPost", () => {
     const { deps } = createDeps({
       generateAiReplies: async () => ({
         aiReplies: [backendReply, reviewerReply],
-        succeededAiHandles: ["backend-ai", "reviewer-ai"],
+        succeededAiHandles: ["sendo-ai", "hiyori-ai"],
         failedAi: [],
       }),
     });
 
     const result = await createPost(
-      { content: "@backend-ai @reviewer-ai 設計を確認して！" },
+      { content: "@sendo-ai @hiyori-ai 設計を確認して！" },
       deps,
     );
 
     expect(result.aiReplyStatus).toBe("completed");
-    expect(result.mentionedAiHandles).toEqual(["backend-ai", "reviewer-ai"]);
-    expect(result.succeededAiHandles).toEqual(["backend-ai", "reviewer-ai"]);
+    expect(result.mentionedAiHandles).toEqual(["sendo-ai", "hiyori-ai"]);
+    expect(result.succeededAiHandles).toEqual(["sendo-ai", "hiyori-ai"]);
     expect(result.aiReplies).toHaveLength(2);
     expect(result.failedAi).toEqual([]);
   });
@@ -256,13 +256,13 @@ describe("createPost", () => {
             "71fcb253-af1e-4a80-847a-f3518bc78bf1",
           ),
         ],
-        succeededAiHandles: ["backend-ai"],
+        succeededAiHandles: ["sendo-ai"],
         failedAi: [],
       }),
     });
 
     const result = await createPost(
-      { content: "@backend-ai @Backend-AI @backend-ai 確認して" },
+      { content: "@sendo-ai @Backend-AI @sendo-ai 確認して" },
       deps,
     );
 
@@ -270,8 +270,8 @@ describe("createPost", () => {
       rootPost: expect.anything(),
       mentionedAiAccounts: [backendAi],
     });
-    expect(result.mentionedAiHandles).toEqual(["backend-ai"]);
-    expect(result.succeededAiHandles).toEqual(["backend-ai"]);
+    expect(result.mentionedAiHandles).toEqual(["sendo-ai"]);
+    expect(result.succeededAiHandles).toEqual(["sendo-ai"]);
   });
 
   it("keeps the human post and reports partial when some AI replies fail", async () => {
@@ -283,22 +283,22 @@ describe("createPost", () => {
     const { deps, insertRootPost } = createDeps({
       generateAiReplies: async () => ({
         aiReplies: [backendReply],
-        succeededAiHandles: ["backend-ai"],
-        failedAi: [{ handle: "reviewer-ai", code: "GENERATION_FAILED" }],
+        succeededAiHandles: ["sendo-ai"],
+        failedAi: [{ handle: "hiyori-ai", code: "GENERATION_FAILED" }],
       }),
     });
 
     const result = await createPost(
-      { content: "@backend-ai @reviewer-ai 確認して" },
+      { content: "@sendo-ai @hiyori-ai 確認して" },
       deps,
     );
 
     expect(insertRootPost).toHaveBeenCalledTimes(1);
     expect(result.post.parentPostId).toBeNull();
     expect(result.aiReplyStatus).toBe("partial");
-    expect(result.succeededAiHandles).toEqual(["backend-ai"]);
+    expect(result.succeededAiHandles).toEqual(["sendo-ai"]);
     expect(result.failedAi).toEqual([
-      { handle: "reviewer-ai", code: "GENERATION_FAILED" },
+      { handle: "hiyori-ai", code: "GENERATION_FAILED" },
     ]);
     expect(result.aiReplies).toEqual([backendReply]);
   });
@@ -309,14 +309,14 @@ describe("createPost", () => {
         aiReplies: [],
         succeededAiHandles: [],
         failedAi: [
-          { handle: "backend-ai", code: "GENERATION_FAILED" },
-          { handle: "reviewer-ai", code: "REPLY_SAVE_FAILED" },
+          { handle: "sendo-ai", code: "GENERATION_FAILED" },
+          { handle: "hiyori-ai", code: "REPLY_SAVE_FAILED" },
         ],
       }),
     });
 
     const result = await createPost(
-      { content: "@backend-ai @reviewer-ai 確認して" },
+      { content: "@sendo-ai @hiyori-ai 確認して" },
       deps,
     );
 
@@ -326,8 +326,8 @@ describe("createPost", () => {
     expect(result.aiReplies).toEqual([]);
     expect(result.succeededAiHandles).toEqual([]);
     expect(result.failedAi).toEqual([
-      { handle: "backend-ai", code: "GENERATION_FAILED" },
-      { handle: "reviewer-ai", code: "REPLY_SAVE_FAILED" },
+      { handle: "sendo-ai", code: "GENERATION_FAILED" },
+      { handle: "hiyori-ai", code: "REPLY_SAVE_FAILED" },
     ]);
   });
 
@@ -341,11 +341,11 @@ describe("createPost", () => {
       }),
     });
 
-    const result = await createPost({ content: "@backend-ai 確認して" }, deps);
+    const result = await createPost({ content: "@sendo-ai 確認して" }, deps);
 
     expect(insertRootPost).toHaveBeenCalledTimes(1);
     expect(result.aiReplyStatus).toBe("disabled");
-    expect(result.mentionedAiHandles).toEqual(["backend-ai"]);
+    expect(result.mentionedAiHandles).toEqual(["sendo-ai"]);
     expect(result.aiReplies).toEqual([]);
     expect(result.succeededAiHandles).toEqual([]);
     expect(result.failedAi).toEqual([]);
@@ -385,7 +385,7 @@ describe("createPost", () => {
     const { deps, findFixedHumanAccount, findAiAccounts, insertRootPost } =
       createDeps();
 
-    await createPost({ content: "@backend-ai hello" }, deps);
+    await createPost({ content: "@sendo-ai hello" }, deps);
 
     expect(findFixedHumanAccount).toHaveBeenCalledTimes(1);
     expect(findAiAccounts).toHaveBeenCalledTimes(1);
@@ -402,20 +402,20 @@ describe("createPost", () => {
       generateAiReplies: (input) => generateAiReplies(input, generateDeps),
     });
 
-    const result = await createPost({ content: "@backend-ai 確認して" }, deps);
+    const result = await createPost({ content: "@sendo-ai 確認して" }, deps);
 
     expect(insertRootPost).toHaveBeenCalledTimes(1);
     expect(generateDeps.generateReply).toHaveBeenCalledTimes(1);
     expect(generateDeps.insertAiReply).toHaveBeenCalledTimes(1);
     expect(result.aiReplyStatus).toBe("completed");
-    expect(result.succeededAiHandles).toEqual(["backend-ai"]);
+    expect(result.succeededAiHandles).toEqual(["sendo-ai"]);
     expect(result.aiReplies).toHaveLength(1);
   });
 });
 
 describe("generateAiReplies", () => {
   const rootPost = makeRootPost({
-    content: "@backend-ai @reviewer-ai 設計を確認して！",
+    content: "@sendo-ai @hiyori-ai 設計を確認して！",
   });
 
   it("skips OpenAI and reply saves when AI replies are disabled", async () => {
@@ -470,7 +470,7 @@ describe("generateAiReplies", () => {
       },
       existingReplies: [],
     });
-    expect(result.succeededAiHandles).toEqual(["backend-ai", "reviewer-ai"]);
+    expect(result.succeededAiHandles).toEqual(["sendo-ai", "hiyori-ai"]);
     expect(result.failedAi).toEqual([]);
     expect(result.aiReplies).toHaveLength(2);
     expect(result.disabled).toBeUndefined();
@@ -496,9 +496,9 @@ describe("generateAiReplies", () => {
       deps,
     );
 
-    expect(result.succeededAiHandles).toEqual(["backend-ai"]);
+    expect(result.succeededAiHandles).toEqual(["sendo-ai"]);
     expect(result.failedAi).toEqual([
-      { handle: "reviewer-ai", code: "GENERATION_FAILED" },
+      { handle: "hiyori-ai", code: "GENERATION_FAILED" },
     ]);
     expect(result.aiReplies).toHaveLength(1);
   });
@@ -521,7 +521,7 @@ describe("generateAiReplies", () => {
 
     expect(result.succeededAiHandles).toEqual([]);
     expect(result.failedAi).toEqual([
-      { handle: "backend-ai", code: "REPLY_SAVE_FAILED" },
+      { handle: "sendo-ai", code: "REPLY_SAVE_FAILED" },
     ]);
     expect(result.aiReplies).toEqual([]);
   });
@@ -541,14 +541,14 @@ describe("generateAiReplies", () => {
     expect(deps.generateReply).not.toHaveBeenCalled();
     expect(deps.insertAiReply).not.toHaveBeenCalled();
     expect(result.failedAi).toEqual([
-      { handle: "backend-ai", code: "GENERATION_FAILED" },
+      { handle: "sendo-ai", code: "GENERATION_FAILED" },
     ]);
   });
 
   it("does not re-parse AI reply content for further mentions", async () => {
     const deps = createGenerateDeps({
       generateReply: async () =>
-        "@frontend-ai も呼んでください。次のAIを起動します。",
+        "@sora-ai も呼んでください。次のAIを起動します。",
       insertAiReply: async (input) =>
         makeAiReply(backendAi, input.content, "saved-backend"),
     });
@@ -563,7 +563,7 @@ describe("generateAiReplies", () => {
 
     expect(deps.generateReply).toHaveBeenCalledTimes(1);
     expect(deps.insertAiReply).toHaveBeenCalledTimes(1);
-    expect(result.succeededAiHandles).toEqual(["backend-ai"]);
-    expect(result.aiReplies[0]?.content).toContain("@frontend-ai");
+    expect(result.succeededAiHandles).toEqual(["sendo-ai"]);
+    expect(result.aiReplies[0]?.content).toContain("@sora-ai");
   });
 });

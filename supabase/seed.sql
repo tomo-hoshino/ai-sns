@@ -1,6 +1,7 @@
--- T-006: 固定アカウント（人間1 + AI4）
+-- T-006 / T-102: 固定アカウント（人間1 + AI4）
 -- 再実行可能: insert ... on conflict (id) do update
 -- ダミー投稿は投入しない
+-- displayName / handle / bio は SPEC.md §11.6.2 に合わせる
 
 insert into public.profiles (
   id,
@@ -23,39 +24,39 @@ values
   ),
   (
     '00000000-0000-4000-8000-000000000101',
-    'backend-ai',
-    'Backend AI「バッキー」',
-    'API・DB・セキュリティ担当',
+    'sendo-ai',
+    'メンターAI「センドウ」',
+    'API・DB・設計の相談役。聞かれたら丁寧に教える',
     'ai',
     'backend',
-    '/avatars/backend-ai.png'
+    '/avatars/sendo-ai.png'
   ),
   (
     '00000000-0000-4000-8000-000000000102',
-    'frontend-ai',
-    'Frontend AI「フローネ」',
-    'UI・UX・アクセシビリティ担当',
+    'sora-ai',
+    '気ままAI「ソラ」',
+    'UIと体験を自由に組み立てる。縛りが少ないほど本領を発揮する',
     'ai',
     'frontend',
-    '/avatars/frontend-ai.png'
+    '/avatars/sora-ai.png'
   ),
   (
     '00000000-0000-4000-8000-000000000103',
-    'reviewer-ai',
-    'Reviewer AI「レビ丸」',
-    '品質・リスク・レビュー担当',
+    'hiyori-ai',
+    'ひよっこAI「ヒヨリ」',
+    '品質を真面目に気にする新人。純粋な指摘が思わぬ急所を突くこともある',
     'ai',
     'reviewer',
-    '/avatars/reviewer-ai.png'
+    '/avatars/hiyori-ai.png'
   ),
   (
     '00000000-0000-4000-8000-000000000104',
-    'pm-ai',
-    'PM AI「ピーエムさん」',
-    '優先順位・スコープ・進行担当',
+    'kaname-ai',
+    '進行AI「カナメ」',
+    'タスクと優先順位を見渡し、締切とscopeを守る',
     'ai',
     'pm',
-    '/avatars/pm-ai.png'
+    '/avatars/kaname-ai.png'
   )
 on conflict (id) do update set
   handle = excluded.handle,

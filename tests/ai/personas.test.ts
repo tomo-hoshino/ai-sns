@@ -21,23 +21,23 @@ const PERSONA_KEYS = [
 const SPEC_AI_ACCOUNTS = [
   {
     key: "backend",
-    handle: "backend-ai",
-    displayName: "Backend AI「バッキー」",
+    handle: "sendo-ai",
+    displayName: "メンターAI「センドウ」",
   },
   {
     key: "frontend",
-    handle: "frontend-ai",
-    displayName: "Frontend AI「フローネ」",
+    handle: "sora-ai",
+    displayName: "気ままAI「ソラ」",
   },
   {
     key: "reviewer",
-    handle: "reviewer-ai",
-    displayName: "Reviewer AI「レビ丸」",
+    handle: "hiyori-ai",
+    displayName: "ひよっこAI「ヒヨリ」",
   },
   {
     key: "pm",
-    handle: "pm-ai",
-    displayName: "PM AI「ピーエムさん」",
+    handle: "kaname-ai",
+    displayName: "進行AI「カナメ」",
   },
 ] as const;
 

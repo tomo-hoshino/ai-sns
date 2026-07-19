@@ -31,22 +31,22 @@ const humanAuthor: Account = {
 
 const backendAiAuthor: Account = {
   id: "00000000-0000-4000-8000-000000000101",
-  handle: "backend-ai",
-  displayName: "Backend AI「バッキー」",
-  bio: "API・DB・セキュリティ担当",
+  handle: "sendo-ai",
+  displayName: "メンターAI「センドウ」",
+  bio: "API・DB・設計の相談役。聞かれたら丁寧に教える",
   accountType: "ai",
   personaKey: "backend",
-  avatarPath: "/avatars/backend-ai.png",
+  avatarPath: "/avatars/sendo-ai.png",
 };
 
 const reviewerAiAuthor: Account = {
   id: "00000000-0000-4000-8000-000000000103",
-  handle: "reviewer-ai",
-  displayName: "Reviewer AI「レビ丸」",
-  bio: "品質・リスク・レビュー担当",
+  handle: "hiyori-ai",
+  displayName: "ひよっこAI「ヒヨリ」",
+  bio: "品質を真面目に気にする新人。純粋な指摘が思わぬ急所を突くこともある",
   accountType: "ai",
   personaKey: "reviewer",
-  avatarPath: "/avatars/reviewer-ai.png",
+  avatarPath: "/avatars/hiyori-ai.png",
 };
 
 const rootPost: Post = {
@@ -59,7 +59,7 @@ const rootPost: Post = {
 
 const mentionedRootPost: Post = {
   ...rootPost,
-  content: "@backend-ai @reviewer-ai 投稿APIの設計を確認して！",
+  content: "@sendo-ai @hiyori-ai 投稿APIの設計を確認して！",
 };
 
 const backendAiReply: Post = {
@@ -140,14 +140,14 @@ describe("POST /api/posts", () => {
       post: mentionedRootPost,
       aiReplies: [backendAiReply, reviewerAiReply],
       aiReplyStatus: "completed",
-      mentionedAiHandles: ["backend-ai", "reviewer-ai"],
-      succeededAiHandles: ["backend-ai", "reviewer-ai"],
+      mentionedAiHandles: ["sendo-ai", "hiyori-ai"],
+      succeededAiHandles: ["sendo-ai", "hiyori-ai"],
       failedAi: [],
     } satisfies CreatePostResult);
 
     const response = await POST(
       createPostRequest({
-        content: "@backend-ai @reviewer-ai 投稿APIの設計を確認して！",
+        content: "@sendo-ai @hiyori-ai 投稿APIの設計を確認して！",
       }),
     );
     const body: unknown = await response.json();
@@ -159,8 +159,8 @@ describe("POST /api/posts", () => {
     expect(typed.data.aiReplies).toHaveLength(2);
     expect(typed.meta).toEqual({
       aiReplyStatus: "completed",
-      mentionedAiHandles: ["backend-ai", "reviewer-ai"],
-      succeededAiHandles: ["backend-ai", "reviewer-ai"],
+      mentionedAiHandles: ["sendo-ai", "hiyori-ai"],
+      succeededAiHandles: ["sendo-ai", "hiyori-ai"],
       failedAi: [],
     });
   });
@@ -170,14 +170,14 @@ describe("POST /api/posts", () => {
       post: mentionedRootPost,
       aiReplies: [reviewerAiReply],
       aiReplyStatus: "partial",
-      mentionedAiHandles: ["backend-ai", "reviewer-ai"],
-      succeededAiHandles: ["reviewer-ai"],
-      failedAi: [{ handle: "backend-ai", code: "GENERATION_FAILED" }],
+      mentionedAiHandles: ["sendo-ai", "hiyori-ai"],
+      succeededAiHandles: ["hiyori-ai"],
+      failedAi: [{ handle: "sendo-ai", code: "GENERATION_FAILED" }],
     } satisfies CreatePostResult);
 
     const response = await POST(
       createPostRequest({
-        content: "@backend-ai @reviewer-ai 投稿APIの設計を確認して！",
+        content: "@sendo-ai @hiyori-ai 投稿APIの設計を確認して！",
       }),
     );
     const body: unknown = await response.json();
@@ -189,9 +189,9 @@ describe("POST /api/posts", () => {
     expect(typed.data.aiReplies).toEqual([reviewerAiReply]);
     expect(typed.meta).toEqual({
       aiReplyStatus: "partial",
-      mentionedAiHandles: ["backend-ai", "reviewer-ai"],
-      succeededAiHandles: ["reviewer-ai"],
-      failedAi: [{ handle: "backend-ai", code: "GENERATION_FAILED" }],
+      mentionedAiHandles: ["sendo-ai", "hiyori-ai"],
+      succeededAiHandles: ["hiyori-ai"],
+      failedAi: [{ handle: "sendo-ai", code: "GENERATION_FAILED" }],
     });
   });
 
@@ -200,17 +200,17 @@ describe("POST /api/posts", () => {
       post: mentionedRootPost,
       aiReplies: [],
       aiReplyStatus: "failed",
-      mentionedAiHandles: ["backend-ai", "reviewer-ai"],
+      mentionedAiHandles: ["sendo-ai", "hiyori-ai"],
       succeededAiHandles: [],
       failedAi: [
-        { handle: "backend-ai", code: "GENERATION_FAILED" },
-        { handle: "reviewer-ai", code: "GENERATION_FAILED" },
+        { handle: "sendo-ai", code: "GENERATION_FAILED" },
+        { handle: "hiyori-ai", code: "GENERATION_FAILED" },
       ],
     } satisfies CreatePostResult);
 
     const response = await POST(
       createPostRequest({
-        content: "@backend-ai @reviewer-ai 投稿APIの設計を確認して！",
+        content: "@sendo-ai @hiyori-ai 投稿APIの設計を確認して！",
       }),
     );
     const body: unknown = await response.json();
@@ -222,11 +222,11 @@ describe("POST /api/posts", () => {
     expect(typed.data.aiReplies).toEqual([]);
     expect(typed.meta).toEqual({
       aiReplyStatus: "failed",
-      mentionedAiHandles: ["backend-ai", "reviewer-ai"],
+      mentionedAiHandles: ["sendo-ai", "hiyori-ai"],
       succeededAiHandles: [],
       failedAi: [
-        { handle: "backend-ai", code: "GENERATION_FAILED" },
-        { handle: "reviewer-ai", code: "GENERATION_FAILED" },
+        { handle: "sendo-ai", code: "GENERATION_FAILED" },
+        { handle: "hiyori-ai", code: "GENERATION_FAILED" },
       ],
     });
   });
@@ -235,17 +235,17 @@ describe("POST /api/posts", () => {
     createPostMock.mockResolvedValue({
       post: {
         ...rootPost,
-        content: "@backend-ai 確認して",
+        content: "@sendo-ai 確認して",
       },
       aiReplies: [],
       aiReplyStatus: "disabled",
-      mentionedAiHandles: ["backend-ai"],
+      mentionedAiHandles: ["sendo-ai"],
       succeededAiHandles: [],
       failedAi: [],
     } satisfies CreatePostResult);
 
     const response = await POST(
-      createPostRequest({ content: "@backend-ai 確認して" }),
+      createPostRequest({ content: "@sendo-ai 確認して" }),
     );
     const body: unknown = await response.json();
 
@@ -256,7 +256,7 @@ describe("POST /api/posts", () => {
     expect(typed.data.aiReplies).toEqual([]);
     expect(typed.meta).toEqual({
       aiReplyStatus: "disabled",
-      mentionedAiHandles: ["backend-ai"],
+      mentionedAiHandles: ["sendo-ai"],
       succeededAiHandles: [],
       failedAi: [],
     });

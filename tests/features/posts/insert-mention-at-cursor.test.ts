@@ -6,41 +6,41 @@ describe("insertMentionAtCursor", () => {
   it("inserts a mention at the cursor without discarding surrounding text", () => {
     const result = insertMentionAtCursor({
       content: "前半後半",
-      handle: "backend-ai",
+      handle: "sendo-ai",
       selectionStart: 2,
       selectionEnd: 2,
     });
 
-    expect(result.content).toBe("前半 @backend-ai 後半");
-    expect(result.cursor).toBe("前半 @backend-ai ".length);
+    expect(result.content).toBe("前半 @sendo-ai 後半");
+    expect(result.cursor).toBe("前半 @sendo-ai ".length);
   });
 
   it("replaces the current selection with the mention", () => {
     const result = insertMentionAtCursor({
       content: "hello world",
-      handle: "pm-ai",
+      handle: "kaname-ai",
       selectionStart: 6,
       selectionEnd: 11,
     });
 
-    expect(result.content).toBe("hello @pm-ai ");
+    expect(result.content).toBe("hello @kaname-ai ");
   });
 
   it("does not add an extra leading space after existing whitespace", () => {
     const result = insertMentionAtCursor({
       content: "hello ",
-      handle: "frontend-ai",
+      handle: "sora-ai",
       selectionStart: 6,
       selectionEnd: 6,
     });
 
-    expect(result.content).toBe("hello @frontend-ai ");
+    expect(result.content).toBe("hello @sora-ai ");
   });
 
   it("clamps the result to the max Unicode length", () => {
     const result = insertMentionAtCursor({
       content: "あいうえお",
-      handle: "backend-ai",
+      handle: "sendo-ai",
       selectionStart: 5,
       selectionEnd: 5,
       maxLength: 10,

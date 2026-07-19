@@ -33,7 +33,7 @@ describe("listTimelinePosts", () => {
         id: "a4e87a1b-989e-46e7-baa2-57d170f86afe",
         createdAt: "2026-07-18T04:10:30.000Z",
         replyCount: 1,
-        content: "@backend-ai 投稿APIの設計を確認して！",
+        content: "@sendo-ai 投稿APIの設計を確認して！",
       }),
       makeRootPost({
         id: "6c2671cd-15f2-464e-bdd7-46c0de4ae342",

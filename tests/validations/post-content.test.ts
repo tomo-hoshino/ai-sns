@@ -67,13 +67,13 @@ describe("postContentSchema", () => {
 describe("createPostRequestSchema", () => {
   it("accepts a valid content field", () => {
     const result = createPostRequestSchema.safeParse({
-      content: "  @backend-ai 確認して  ",
+      content: "  @sendo-ai 確認して  ",
     });
 
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data).toEqual({
-        content: "@backend-ai 確認して",
+        content: "@sendo-ai 確認して",
       });
     }
   });

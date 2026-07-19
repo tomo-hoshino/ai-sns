@@ -19,12 +19,12 @@ const humanRow = {
 
 const aiRow = {
   id: "00000000-0000-4000-8000-000000000101",
-  handle: "backend-ai",
-  display_name: "Backend AI「バッキー」",
-  bio: "API・DB・セキュリティ担当",
+  handle: "sendo-ai",
+  display_name: "メンターAI「センドウ」",
+  bio: "API・DB・設計の相談役。聞かれたら丁寧に教える",
   account_type: "ai",
   persona_key: "backend",
-  avatar_path: "/avatars/backend-ai.png",
+  avatar_path: "/avatars/sendo-ai.png",
 };
 
 describe("mapAccount", () => {
@@ -43,12 +43,12 @@ describe("mapAccount", () => {
   it("maps an AI profile row with personaKey", () => {
     expect(mapAccount(aiRow)).toEqual({
       id: aiRow.id,
-      handle: "backend-ai",
-      displayName: "Backend AI「バッキー」",
-      bio: "API・DB・セキュリティ担当",
+      handle: "sendo-ai",
+      displayName: "メンターAI「センドウ」",
+      bio: "API・DB・設計の相談役。聞かれたら丁寧に教える",
       accountType: "ai",
       personaKey: "backend",
-      avatarPath: "/avatars/backend-ai.png",
+      avatarPath: "/avatars/sendo-ai.png",
     });
   });
 

@@ -32,21 +32,21 @@ vi.mock("sonner", () => ({
 const aiAccounts: readonly Account[] = [
   {
     id: "00000000-0000-4000-8000-000000000101",
-    handle: "backend-ai",
-    displayName: "Backend AI「バッキー」",
-    bio: "API・DB・セキュリティ担当",
+    handle: "sendo-ai",
+    displayName: "メンターAI「センドウ」",
+    bio: "API・DB・設計の相談役。聞かれたら丁寧に教える",
     accountType: "ai",
     personaKey: "backend",
-    avatarPath: "/avatars/backend-ai.png",
+    avatarPath: "/avatars/sendo-ai.png",
   },
   {
     id: "00000000-0000-4000-8000-000000000102",
-    handle: "frontend-ai",
-    displayName: "Frontend AI「フローネ」",
-    bio: "UI・UX・アクセシビリティ担当",
+    handle: "sora-ai",
+    displayName: "気ままAI「ソラ」",
+    bio: "UIと体験を自由に組み立てる。縛りが少ないほど本領を発揮する",
     accountType: "ai",
     personaKey: "frontend",
-    avatarPath: "/avatars/frontend-ai.png",
+    avatarPath: "/avatars/sora-ai.png",
   },
 ];
 
@@ -187,7 +187,7 @@ describe("PostComposer mentions and API outcomes", () => {
       }),
     );
 
-    expect(textarea.value).toBe("@backend-ai 確認お願いします");
+    expect(textarea.value).toBe("@sendo-ai 確認お願いします");
   });
 
   it("keeps input on API failure and shows a safe error message", async () => {
@@ -228,8 +228,8 @@ describe("PostComposer mentions and API outcomes", () => {
         JSON.stringify(
           createSuccessResponse({
             aiReplyStatus: "completed",
-            mentionedAiHandles: ["backend-ai"],
-            succeededAiHandles: ["backend-ai"],
+            mentionedAiHandles: ["sendo-ai"],
+            succeededAiHandles: ["sendo-ai"],
             failedAi: [],
           }),
         ),
@@ -258,9 +258,9 @@ describe("PostComposer mentions and API outcomes", () => {
         JSON.stringify(
           createSuccessResponse({
             aiReplyStatus: "partial",
-            mentionedAiHandles: ["backend-ai", "frontend-ai"],
-            succeededAiHandles: ["frontend-ai"],
-            failedAi: [{ handle: "backend-ai", code: "GENERATION_FAILED" }],
+            mentionedAiHandles: ["sendo-ai", "sora-ai"],
+            succeededAiHandles: ["sora-ai"],
+            failedAi: [{ handle: "sendo-ai", code: "GENERATION_FAILED" }],
           }),
         ),
         { status: 201, headers: { "Content-Type": "application/json" } },
@@ -274,7 +274,7 @@ describe("PostComposer mentions and API outcomes", () => {
     await waitFor(() => {
       expect(toastSuccess).toHaveBeenCalledWith("投稿しました。");
       expect(toastWarning).toHaveBeenCalledWith(
-        "一部のAI返信に失敗しました（@backend-ai）。",
+        "一部のAI返信に失敗しました（@sendo-ai）。",
       );
     });
     expect(refreshMock).toHaveBeenCalledTimes(1);
@@ -289,9 +289,9 @@ describe("PostComposer mentions and API outcomes", () => {
         JSON.stringify(
           createSuccessResponse({
             aiReplyStatus: "failed",
-            mentionedAiHandles: ["backend-ai"],
+            mentionedAiHandles: ["sendo-ai"],
             succeededAiHandles: [],
-            failedAi: [{ handle: "backend-ai", code: "GENERATION_FAILED" }],
+            failedAi: [{ handle: "sendo-ai", code: "GENERATION_FAILED" }],
           }),
         ),
         { status: 201, headers: { "Content-Type": "application/json" } },
@@ -314,7 +314,7 @@ describe("PostComposer mentions and API outcomes", () => {
         JSON.stringify(
           createSuccessResponse({
             aiReplyStatus: "disabled",
-            mentionedAiHandles: ["backend-ai"],
+            mentionedAiHandles: ["sendo-ai"],
             succeededAiHandles: [],
             failedAi: [],
           }),
