@@ -96,6 +96,7 @@ export function PostCard({
         </span>
         <Link
           href={threadHref}
+          aria-label={`@${author.handle}の投稿の返信を表示`}
           className="text-foreground focus-visible:border-ring focus-visible:ring-ring/50 text-sm font-medium underline-offset-4 hover:underline focus-visible:ring-3"
         >
           返信を表示

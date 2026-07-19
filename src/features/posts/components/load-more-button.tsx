@@ -39,6 +39,11 @@ export function LoadMoreButton({
       >
         {isLoading ? "読み込み中…" : label}
       </Button>
+      {isLoading ? (
+        <p className="sr-only" aria-live="polite" aria-atomic="true">
+          追加の投稿を読み込み中です。
+        </p>
+      ) : null}
     </div>
   );
 }

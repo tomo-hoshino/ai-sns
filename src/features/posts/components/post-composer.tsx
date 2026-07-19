@@ -110,6 +110,7 @@ export function PostComposer({ aiAccounts }: PostComposerProps) {
     isSubmittingRef.current = true;
     setIsSubmitting(true);
     setValidationMessage(null);
+    setStatusMessage("投稿を送信しています。");
 
     try {
       const result = await createPostRequest(trimmed);
@@ -185,7 +186,11 @@ export function PostComposer({ aiAccounts }: PostComposerProps) {
         ) : null}
       </div>
 
-      <AiMentionList accounts={aiAccounts} onSelect={handleMentionSelect} />
+      <AiMentionList
+        accounts={aiAccounts}
+        onSelect={handleMentionSelect}
+        disabled={isSubmitting}
+      />
 
       <p className="sr-only" aria-live="polite" aria-atomic="true">
         {statusMessage}

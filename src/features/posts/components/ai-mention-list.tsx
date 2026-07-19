@@ -9,6 +9,7 @@ import type { Account } from "@/types/account";
 export type AiMentionListProps = {
   accounts: readonly Account[];
   onSelect: (handle: string) => void;
+  disabled?: boolean;
 };
 
 function getAvatarFallbackLabel(account: Account): string {
@@ -25,11 +26,16 @@ export function getAiMentionAccessibleName(account: Account): string {
   return `${account.displayName}（@${account.handle}）をメンション。役割: ${account.bio}`;
 }
 
-export function AiMentionList({ accounts, onSelect }: AiMentionListProps) {
+export function AiMentionList({
+  accounts,
+  onSelect,
+  disabled = false,
+}: AiMentionListProps) {
   return (
     <div
       role="group"
       aria-label="AIメンション候補"
+      aria-disabled={disabled || undefined}
       className="flex flex-wrap gap-2"
     >
       {accounts.map((account) => (
@@ -38,6 +44,7 @@ export function AiMentionList({ accounts, onSelect }: AiMentionListProps) {
           type="button"
           variant="outline"
           size="sm"
+          disabled={disabled}
           className={cn(
             "h-auto max-w-full justify-start gap-2 px-2 py-1.5 whitespace-normal",
             "border-l-2",
