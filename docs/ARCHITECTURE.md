@@ -42,8 +42,10 @@ flowchart TB
 
 - ブラウザから届く値はすべて未検証として扱う。
 - `SUPABASE_SERVICE_ROLE_KEY` と `OPENAI_API_KEY` はVercelのサーバー実行環境だけで使用する。
-- ブラウザはSupabaseとOpenAI APIを直接呼び出さない。
-- SupabaseはRLSを有効にし、MVPでは公開用policyを作成しない。service roleだけがアクセスする。
+- ブラウザはSupabase Data APIとOpenAI APIを直接呼び出さない（Auth の magic link / session cookie のみ T-111 で利用）。
+- SupabaseはRLSを有効にする。Post-MVPでは公開読取と「自分のルート投稿 insert」だけを許可する（§6.6）。
+- repository / AI返信の書き込みは当面 **service role** 経由（AI著者は Auth ユーザーではないため）。service role は RLS を bypass する。
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` は session 用（T-111）に限りサーバー/ブラウザへ露出してよい。service role は絶対に `NEXT_PUBLIC_` へ置かない。
 
 ## 3. レイヤーと依存方向
 
@@ -89,6 +91,8 @@ sequenceDiagram
 
 ### 4.2 人間の投稿とAI返信
 
+Post-MVP（契約は T-110、Route Handler 反映は T-112）では、投稿著者は固定 `@you` ではなく **ログイン中セッションの人間 `profiles`** です。未ログインは 401。
+
 ```mermaid
 sequenceDiagram
     actor User as 利用者
@@ -97,16 +101,17 @@ sequenceDiagram
     participant DB as Supabase
     participant AI as OpenAI
 
-    User->>API: { content }
+    User->>API: { content } + session cookie
+    API->>API: セッション確認（未ログインは401）
     API->>API: Zod検証
-    API->>Service: validated input
-    Service->>DB: 人間のルート投稿を保存
+    API->>Service: validated input + authorProfile
+    Service->>DB: 人間のルート投稿を保存（author_id = session user）
     DB-->>Service: saved post
     Service->>Service: 有効なAI mentionを抽出
     par AIごとに独立実行
         Service->>AI: persona + root post（既存返信は渡さない）
         AI-->>Service: 1〜300文字の返信
-        Service->>DB: AI返信を保存
+        Service->>DB: AI返信を保存（service role）
     end
     Service-->>API: 投稿・成功返信・失敗AI
     API-->>User: 201 Created
@@ -114,13 +119,14 @@ sequenceDiagram
 
 重要な順序:
 
-1. API入力を検証する。
-2. 固定の人間アカウントを取得する。
-3. 人間のルート投稿をDBへ先に保存する。
-4. 本文から有効AIハンドルを出現順に抽出する。
-5. 各AIの返信生成を `Promise.allSettled` で並列実行する。
-6. AIごとに生成成功後の返信を保存する。
-7. 成功・失敗を集約してHTTP 201を返す。
+1. セッションを確認する。未ログインなら 401。
+2. API入力を検証する。
+3. セッションユーザーの人間 `profiles` を著者として取得する（`profiles.id = auth.users.id`）。
+4. 人間のルート投稿をDBへ先に保存する。
+5. 本文から有効AIハンドルを出現順に抽出する。
+6. 各AIの返信生成を `Promise.allSettled` で並列実行する。
+7. AIごとに生成成功後の返信を保存する。
+8. 成功・失敗を集約してHTTP 201を返す。
 
 人間投稿とAI生成を1つのDB transactionにまとめません。OpenAI API失敗で人間投稿まで消えることを避けるためです。
 
@@ -218,8 +224,13 @@ src/
 
 ```mermaid
 erDiagram
+    AUTH_USERS ||--o| PROFILES : "human id equals auth.users.id"
     PROFILES ||--o{ POSTS : authors
     POSTS o|--o{ POSTS : has_replies
+
+    AUTH_USERS {
+        uuid id PK
+    }
 
     PROFILES {
         uuid id PK
@@ -241,18 +252,20 @@ erDiagram
     }
 ```
 
+Auth で作成された人間だけが `auth.users` と対応します。AI とレガシー `@you` は `auth.users` 行を持たないため、`profiles.id → auth.users(id)` のテーブル全体 FK は付けません（紐付けは同 UUID + signup trigger。ADR-009）。
+
 ### 6.2 `profiles`
 
-| カラム         | 型             | NULL | 制約・用途                                   |
-| -------------- | -------------- | ---- | -------------------------------------------- |
-| `id`           | `uuid`         | NO   | PK。seedで固定UUIDを指定                     |
-| `handle`       | `varchar(32)`  | NO   | UNIQUE、小文字、`^[a-z0-9]+(?:-[a-z0-9]+)*$` |
-| `display_name` | `varchar(50)`  | NO   | 画面表示名                                   |
-| `bio`          | `varchar(160)` | NO   | 役割の短い説明                               |
-| `account_type` | `varchar(10)`  | NO   | CHECKで `human` または `ai`                  |
-| `persona_key`  | `varchar(32)`  | YES  | AIだけ設定。UNIQUE、promptとの対応キー       |
-| `avatar_path`  | `varchar(255)` | NO   | `/avatars/sendo-ai.png` など                 |
-| `created_at`   | `timestamptz`  | NO   | `now()`                                      |
+| カラム         | 型             | NULL | 制約・用途                                                           |
+| -------------- | -------------- | ---- | -------------------------------------------------------------------- |
+| `id`           | `uuid`         | NO   | PK。Auth人間は `auth.users.id`。seed AI / レガシー `@you` は固定UUID |
+| `handle`       | `varchar(32)`  | NO   | UNIQUE、小文字、`^[a-z0-9]+(?:-[a-z0-9]+)*$`                         |
+| `display_name` | `varchar(50)`  | NO   | 画面表示名                                                           |
+| `bio`          | `varchar(160)` | NO   | 役割の短い説明                                                       |
+| `account_type` | `varchar(10)`  | NO   | CHECKで `human` または `ai`                                          |
+| `persona_key`  | `varchar(32)`  | YES  | AIだけ設定。UNIQUE、promptとの対応キー                               |
+| `avatar_path`  | `varchar(255)` | NO   | `/avatars/sendo-ai.png` など                                         |
+| `created_at`   | `timestamptz`  | NO   | `now()`                                                              |
 
 追加制約:
 
@@ -262,6 +275,18 @@ check (
   or (account_type = 'human' and persona_key is null)
 )
 ```
+
+#### Auth signup trigger（T-110）
+
+`auth.users` の `AFTER INSERT` で `public.handle_new_auth_user()`（`security definer`）が人間 `profiles` を1件作成します。
+
+| 項目                           | 内容                                                      |
+| ------------------------------ | --------------------------------------------------------- |
+| `id`                           | `new.id`（`auth.users.id` と同値）                        |
+| `handle`                       | email ローカル部を sanitize。衝突時は `-1`, `-2`…         |
+| `display_name`                 | `raw_user_meta_data.display_name` または email ローカル部 |
+| `bio` / `avatar_path`          | デフォルト（`AI社員と一緒に働く人` / `/avatars/you.png`） |
+| `account_type` / `persona_key` | `human` / `null`                                          |
 
 ### 6.3 `posts`
 
@@ -289,24 +314,42 @@ create index posts_replies_idx
 
 ### 6.5 固定seed
 
-| UUID末尾 | handle       | account_type | persona_key |
-| -------- | ------------ | ------------ | ----------- |
-| `000001` | `you`        | `human`      | NULL        |
-| `000101` | `sendo-ai`   | `ai`         | `backend`   |
-| `000102` | `sora-ai`    | `ai`         | `frontend`  |
-| `000103` | `hiyori-ai`  | `ai`         | `reviewer`  |
-| `000104` | `kaname-ai`  | `ai`         | `pm`        |
+| UUID末尾 | handle      | account_type | persona_key | 備考                                                                                    |
+| -------- | ----------- | ------------ | ----------- | --------------------------------------------------------------------------------------- |
+| `000001` | `you`       | `human`      | NULL        | **レガシー**。Auth非連携。既存投稿の著者として残す。新規投稿の著者には使わない（T-112） |
+| `000101` | `sendo-ai`  | `ai`         | `backend`   | Authユーザーにしない                                                                    |
+| `000102` | `sora-ai`   | `ai`         | `frontend`  | Authユーザーにしない                                                                    |
+| `000103` | `hiyori-ai` | `ai`         | `reviewer`  | Authユーザーにしない                                                                    |
+| `000104` | `kaname-ai` | `ai`         | `pm`        | Authユーザーにしない                                                                    |
 
 表示名・bio・avatar_pathは [SPEC.md §11.6.2](./SPEC.md#1162-公開ui対応表t-102以降の正) に合わせる。旧handleはmention aliasのみ（ADR-008）。
 
-完全なUUIDは `00000000-0000-4000-8000-000000000001` の形式で統一します。seedは再実行可能にします。
+完全なUUIDは `00000000-0000-4000-8000-000000000001` の形式で統一します。seedは再実行可能にします。`@you` は削除しない（`posts.author_id` の `ON DELETE RESTRICT` と履歴保全）。
 
-### 6.6 RLS
+### 6.6 RLS（Post-MVP / T-110）
 
-- `profiles` と `posts` のRLSを有効にする。
-- anon/authenticated向けpolicyはMVPでは作らない。
-- Next.jsのサーバー専用Supabase clientだけがservice roleで読み書きする。
+RLSは有効のまま。migration `20260719120000_auth_profiles_and_rls.sql` で次の policy を定義する。
+
+| policy                   | table      | command  | roles                   | 条件                                                   |
+| ------------------------ | ---------- | -------- | ----------------------- | ------------------------------------------------------ |
+| `profiles_select_public` | `profiles` | `SELECT` | `anon`, `authenticated` | 常に許可                                               |
+| `posts_select_public`    | `posts`    | `SELECT` | `anon`, `authenticated` | 常に許可                                               |
+| `posts_insert_own_root`  | `posts`    | `INSERT` | `authenticated`         | `author_id = auth.uid()` かつ `parent_post_id is null` |
+
+- `UPDATE` / `DELETE` policy は作らない（投稿編集・削除・プロフィール編集は対象外）。
+- AI返信の `INSERT` は Authenticated policy では不可。service role（RLS bypass）経由のみ。
+- Next.js の repository は当面 service role で読み書きする。anon key を Data API の直接書込に使わない。
 - service role keyの漏えいは全データ操作につながるため、client componentから参照可能なモジュールへimportしない。
+
+### 6.7 Auth / session とキーの役割（T-110〜T-112）
+
+| キー / 手段                     | 用途                                                | 配置                              |
+| ------------------------------- | --------------------------------------------------- | --------------------------------- |
+| `SUPABASE_SERVICE_ROLE_KEY`     | repository / AI返信の DB 読み書き                   | server-only                       |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | magic link・session cookie（T-111）                 | public + server                   |
+| Session cookie                  | ログイン状態。`POST /api/posts` の著者決定（T-112） | HTTP-only cookie（Supabase Auth） |
+
+ブラウザは `profiles` / `posts` へ直接 query しない。閲覧・投稿は従来どおり Next.js（Server Component / Route Handler）経由。
 
 ## 7. ドメイン型
 
@@ -386,6 +429,7 @@ flowchart TB
 
 | 失敗箇所             | 動作                                                   |
 | -------------------- | ------------------------------------------------------ |
+| 未ログインで投稿     | 401。`UNAUTHORIZED`（T-112で Route Handler 反映）      |
 | API入力不正          | 400。入力欄の近くへ理由を表示                          |
 | 人間投稿のDB保存失敗 | 500。入力を保持して再試行可能にする                    |
 | 一部AI生成/保存失敗  | 201。成功返信を返し、失敗AIを `meta.failedAi` に含める |
@@ -409,15 +453,15 @@ flowchart TB
 | 並列AI生成           | 複数メンション時の待ち時間を抑えられる                           | 逐次生成、ジョブキュー               |
 | 1階層スレッド        | MVPのAI返信要件を最小DB構造で満たす                              | 無制限の入れ子返信                   |
 
-## 12. 将来の変更点
+## 12. 将来の変更点 / Post-MVP進行中
 
-将来機能を追加するときの置換場所だけを示します。MVPでは実装しません。
-
-| 将来機能         | 主な変更箇所                                                 |
-| ---------------- | ------------------------------------------------------------ |
-| 認証             | Supabase Auth、RLS policy、固定人間IDの除去                  |
-| 人間の返信       | `createPost` のparent検証、composerのthread対応              |
-| 非同期AI返信     | `createPost` からqueueへenqueueし、workerでAI moduleを再利用 |
-| AI同士の自律会話 | trigger policy、会話回数上限、cost guard、監査ログ           |
-| RAG              | AI moduleへcontext providerを追加                            |
-| 複数LLM          | `generateReply` interfaceのprovider実装を分離                |
+| 機能                           | 状態                                         | 主な変更箇所                                                  |
+| ------------------------------ | -------------------------------------------- | ------------------------------------------------------------- |
+| 認証基盤（profiles連携・RLS）  | **T-110 完了**（本ドキュメント + migration） | Auth trigger、RLS、ADR-009                                    |
+| ログイン UI                    | T-111                                        | Header、magic link画面、session cookie client                 |
+| 投稿著者をセッションユーザーへ | T-112                                        | `createPost`、`POST /api/posts` の401、固定 `@you` 著者の廃止 |
+| 人間の返信                     | 未着手                                       | `createPost` のparent検証、composerのthread対応               |
+| 非同期AI返信                   | 未着手                                       | `createPost` からqueueへenqueueし、workerでAI moduleを再利用  |
+| AI同士の自律会話               | 未着手                                       | trigger policy、会話回数上限、cost guard、監査ログ            |
+| RAG                            | 未着手                                       | AI moduleへcontext providerを追加                             |
+| 複数LLM                        | 未着手                                       | `generateReply` interfaceのprovider実装を分離                 |
