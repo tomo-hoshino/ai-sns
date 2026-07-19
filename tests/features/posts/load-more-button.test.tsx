@@ -22,7 +22,7 @@ describe("LoadMoreButton", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("disables the button while loading", () => {
+  it("disables the button while loading and announces progress", () => {
     render(
       <LoadMoreButton
         hasMore
@@ -33,6 +33,9 @@ describe("LoadMoreButton", () => {
     );
 
     expect(screen.getByRole("button", { name: "読み込み中…" })).toBeDisabled();
+    expect(
+      screen.getByText("追加の投稿を読み込み中です。"),
+    ).toBeInTheDocument();
   });
 
   it("shows a retry label and alert after an error", async () => {

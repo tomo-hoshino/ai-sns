@@ -77,10 +77,9 @@ describe("PostCard", () => {
     expect(time.tagName).toBe("TIME");
     expect(time).toHaveAttribute("dateTime", humanPost.createdAt);
 
-    expect(screen.getByRole("link", { name: "返信を表示" })).toHaveAttribute(
-      "href",
-      `/posts/${humanPost.id}`,
-    );
+    expect(
+      screen.getByRole("link", { name: "@youの投稿の返信を表示" }),
+    ).toHaveAttribute("href", `/posts/${humanPost.id}`);
   });
 
   it("does not show an AI badge for human authors", () => {
@@ -100,10 +99,9 @@ describe("PostCard", () => {
     expect(container.querySelector("[data-slot='card']")?.className).toMatch(
       /border-l-ai-backend/,
     );
-    expect(screen.getByRole("link", { name: "返信を表示" })).toHaveAttribute(
-      "href",
-      `/posts/${humanPost.id}`,
-    );
+    expect(
+      screen.getByRole("link", { name: "@backend-aiの投稿の返信を表示" }),
+    ).toHaveAttribute("href", `/posts/${humanPost.id}`);
   });
 
   it("highlights only valid AI mentions as React text", () => {

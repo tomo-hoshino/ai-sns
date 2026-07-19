@@ -5,29 +5,29 @@ import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 
-type AppErrorProps = {
+type ThreadErrorProps = {
   error: Error & { digest?: string };
   reset: () => void;
 };
 
-export default function AppError({ error, reset }: AppErrorProps) {
+export default function ThreadError({ error, reset }: ThreadErrorProps) {
   useEffect(() => {
     // digest only — never log stack, SQL, or post body from the thrown error.
-    console.error("Page failed", { digest: error.digest });
+    console.error("Thread page failed", { digest: error.digest });
   }, [error.digest]);
 
   return (
     <section
-      aria-labelledby="app-error-heading"
+      aria-labelledby="thread-error-heading"
       className="border-border bg-card space-y-4 rounded-xl border px-4 py-10 text-center"
       role="alert"
     >
       <div className="space-y-2">
         <h1
-          id="app-error-heading"
+          id="thread-error-heading"
           className="text-foreground text-lg font-semibold tracking-tight"
         >
-          表示できません
+          スレッドを表示できません
         </h1>
         <p className="text-muted-foreground text-sm">
           一時的な問題が発生した可能性があります。しばらくしてから再試行してください。

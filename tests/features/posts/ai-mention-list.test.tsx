@@ -53,9 +53,7 @@ const aiAccounts: readonly Account[] = [
 
 describe("AiMentionList", () => {
   it("renders four AI mention buttons with accessible names", () => {
-    render(
-      <AiMentionList accounts={aiAccounts} onSelect={() => undefined} />,
-    );
+    render(<AiMentionList accounts={aiAccounts} onSelect={() => undefined} />);
 
     const group = screen.getByRole("group", { name: "AIメンション候補" });
     expect(group).toBeInTheDocument();
@@ -128,5 +126,23 @@ describe("AiMentionList", () => {
 
     await user.keyboard(" ");
     expect(onSelect).toHaveBeenCalledWith("reviewer-ai");
+  });
+
+  it("disables all mention buttons when disabled", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+
+    render(
+      <AiMentionList accounts={aiAccounts} onSelect={onSelect} disabled />,
+    );
+
+    const buttons = screen.getAllByRole("button");
+    expect(buttons).toHaveLength(4);
+    for (const button of buttons) {
+      expect(button).toBeDisabled();
+    }
+
+    await user.click(buttons[0]);
+    expect(onSelect).not.toHaveBeenCalled();
   });
 });

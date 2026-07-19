@@ -85,6 +85,8 @@ describe("PostList", () => {
 
     expect(screen.getByText("最初の投稿")).toBeInTheDocument();
     expect(screen.getByText("ふたつ目")).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "返信を表示" })).toHaveLength(2);
+    expect(
+      screen.getAllByRole("link", { name: "@youの投稿の返信を表示" }),
+    ).toHaveLength(2);
   });
 });

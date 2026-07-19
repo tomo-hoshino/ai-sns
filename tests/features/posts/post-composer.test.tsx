@@ -137,6 +137,7 @@ describe("PostComposer character limits", () => {
     expect(toastSuccess).toHaveBeenCalledWith("投稿しました。");
     expect(refreshMock).toHaveBeenCalledTimes(1);
     expect(textarea).toHaveValue("");
+    expect(screen.getByText("投稿しました。")).toBeInTheDocument();
   });
 
   it("allows exactly 300 characters", async () => {
@@ -216,6 +217,7 @@ describe("PostComposer mentions and API outcomes", () => {
     });
     expect(textarea).toHaveValue("保存してほしい本文");
     expect(refreshMock).not.toHaveBeenCalled();
+    expect(screen.getByText("投稿の保存に失敗しました。")).toBeInTheDocument();
   });
 
   it("notifies completed AI replies after a 201 response", async () => {
@@ -349,6 +351,12 @@ describe("PostComposer mentions and API outcomes", () => {
 
     expect(screen.getByRole("button", { name: "投稿中…" })).toBeDisabled();
     expect(screen.getByLabelText("新しい投稿")).toBeDisabled();
+    expect(
+      screen.getByRole("button", {
+        name: getAiMentionAccessibleName(aiAccounts[0]),
+      }),
+    ).toBeDisabled();
+    expect(screen.getByText("投稿を送信しています。")).toBeInTheDocument();
 
     resolveFetch?.(
       new Response(
