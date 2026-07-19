@@ -218,6 +218,36 @@ describe("PostComposer mentions and API outcomes", () => {
     expect(refreshMock).not.toHaveBeenCalled();
   });
 
+  it("notifies completed AI replies after a 201 response", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify(
+          createSuccessResponse({
+            aiReplyStatus: "completed",
+            mentionedAiHandles: ["backend-ai"],
+            succeededAiHandles: ["backend-ai"],
+            failedAi: [],
+          }),
+        ),
+        { status: 201, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    render(<PostComposer aiAccounts={aiAccounts} />);
+    await user.type(screen.getByLabelText("新しい投稿"), "完了テスト");
+    await user.click(screen.getByRole("button", { name: "投稿する" }));
+
+    await waitFor(() => {
+      expect(toastSuccess).toHaveBeenCalledWith(
+        "投稿しました。AIからの返信が届きました。",
+      );
+    });
+    expect(toastWarning).not.toHaveBeenCalled();
+    expect(refreshMock).toHaveBeenCalledTimes(1);
+  });
+
   it("notifies partial AI reply failures after a 201 response", async () => {
     const user = userEvent.setup();
     const fetchMock = vi.mocked(fetch);
