@@ -1,4 +1,4 @@
-export type CreatePostErrorCode = "FIXED_HUMAN_NOT_FOUND" | "POST_SAVE_FAILED";
+export type CreatePostErrorCode = "AUTHOR_NOT_HUMAN" | "POST_SAVE_FAILED";
 
 /**
  * Domain error from createPost. Route Handlers map codes to HTTP status.

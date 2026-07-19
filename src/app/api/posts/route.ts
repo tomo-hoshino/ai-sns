@@ -1,4 +1,4 @@
-import type { NextRequest } from "next/server";
+import type { NextRequest, NextResponse } from "next/server";
 
 import { parseJsonBody } from "@/lib/api/request";
 import {
@@ -7,17 +7,21 @@ import {
   internalErrorResponse,
   jsonError,
   jsonOk,
+  unauthorizedErrorResponse,
   validationErrorResponse,
 } from "@/lib/api/response";
+import { findHumanAccountById } from "@/lib/repositories/account-repository";
 import { RepositoryError } from "@/lib/repositories/errors";
 import { createPost } from "@/lib/services/create-post";
 import { CreatePostError } from "@/lib/services/errors";
 import { listTimelinePosts } from "@/lib/services/list-timeline-posts";
+import { getSessionUser } from "@/lib/supabase/get-session-user";
 import {
   createPostRequestSchema,
   createPostResponseSchema,
   listPostsQuerySchema,
 } from "@/lib/validations/post";
+import type { Account } from "@/types/account";
 import type { CreatePostResponse } from "@/types/api";
 
 export async function GET(request: NextRequest) {
@@ -47,6 +51,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const requestId = createRequestId();
 
+  const sessionUser = await getSessionUser();
+  if (sessionUser === null) {
+    return unauthorizedErrorResponse(requestId);
+  }
+
   const parsedBody = await parseJsonBody(request);
   if (!parsedBody.ok) {
     return jsonParseErrorResponse(requestId, parsedBody.reason);
@@ -57,9 +66,15 @@ export async function POST(request: NextRequest) {
     return validationErrorResponse(requestId, parsedRequest.error);
   }
 
+  const authorResult = await loadSessionAuthor(sessionUser.id, requestId);
+  if (!authorResult.ok) {
+    return authorResult.response;
+  }
+
   try {
     const result = await createPost({
       content: parsedRequest.data.content,
+      author: authorResult.author,
     });
 
     const body = {
@@ -80,6 +95,26 @@ export async function POST(request: NextRequest) {
     return jsonOk(body, { status: 201 });
   } catch (error: unknown) {
     return mapCreatePostError(requestId, error);
+  }
+}
+
+async function loadSessionAuthor(
+  userId: string,
+  requestId: string,
+): Promise<
+  { ok: true; author: Account } | { ok: false; response: NextResponse }
+> {
+  try {
+    const author = await findHumanAccountById(userId);
+    if (author === null) {
+      return { ok: false, response: internalErrorResponse(requestId) };
+    }
+    return { ok: true, author };
+  } catch (error: unknown) {
+    if (error instanceof RepositoryError) {
+      return { ok: false, response: databaseErrorResponse(requestId) };
+    }
+    return { ok: false, response: internalErrorResponse(requestId) };
   }
 }
 

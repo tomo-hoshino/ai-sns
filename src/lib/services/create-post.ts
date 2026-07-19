@@ -6,10 +6,7 @@ import {
 } from "@/lib/ai/generate-reply";
 import { extractMentionedAiAccounts } from "@/lib/ai/mentions";
 import { getEnv } from "@/lib/env";
-import {
-  findAiAccounts,
-  findFixedHumanAccount,
-} from "@/lib/repositories/account-repository";
+import { findAiAccounts } from "@/lib/repositories/account-repository";
 import { RepositoryError } from "@/lib/repositories/errors";
 import {
   insertAiReply,
@@ -25,6 +22,8 @@ import type { Post } from "@/types/post";
 export type CreatePostInput = {
   /** Trimmed post body (1–300 Unicode code points). Validated at the API boundary. */
   content: string;
+  /** Session user's human profile. Author is never taken from the request body. */
+  author: Account;
 };
 
 export type GenerateAiRepliesInput = {
@@ -51,7 +50,6 @@ export type GenerateAiRepliesDeps = {
 };
 
 export type CreatePostDeps = {
-  findFixedHumanAccount: () => Promise<Account | null>;
   findAiAccounts: () => Promise<Account[]>;
   insertRootPost: (input: InsertRootPostInput) => Promise<Post>;
   generateAiReplies: GenerateAiReplies;
@@ -99,7 +97,6 @@ export async function generateAiReplies(
 }
 
 const defaultDeps: CreatePostDeps = {
-  findFixedHumanAccount,
   findAiAccounts,
   insertRootPost,
   generateAiReplies,
@@ -114,15 +111,14 @@ export async function createPost(
   deps: CreatePostDeps = defaultDeps,
 ): Promise<CreatePostResult> {
   const content = input.content.trim();
-  const author = await deps.findFixedHumanAccount();
-  if (author === null) {
+  if (input.author.accountType !== "human") {
     throw new CreatePostError(
-      "FIXED_HUMAN_NOT_FOUND",
-      "Fixed human account is missing",
+      "AUTHOR_NOT_HUMAN",
+      "Post author must be a human account",
     );
   }
 
-  const post = await saveRootPost(deps, author.id, content);
+  const post = await saveRootPost(deps, input.author.id, content);
   const aiAccounts = await deps.findAiAccounts();
   const mentionedAiAccounts = extractMentionedAiAccounts(content, aiAccounts);
   const mentionedAiHandles = mentionedAiAccounts.map(

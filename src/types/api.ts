@@ -3,6 +3,7 @@ import type { Post, TimelinePost } from "@/types/post";
 
 export type ApiErrorCode =
   | "VALIDATION_ERROR"
+  | "UNAUTHORIZED"
   | "THREAD_NOT_FOUND"
   | "METHOD_NOT_ALLOWED"
   | "DATABASE_ERROR"
