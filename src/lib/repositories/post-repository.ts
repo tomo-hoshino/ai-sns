@@ -47,6 +47,15 @@ export type FindTimelinePageResult = {
   hasMore: boolean;
 };
 
+export type FindRootPostsByAuthorIdParams = {
+  authorId: string;
+  limit: number;
+};
+
+export type FindRootPostsByAuthorIdResult = {
+  posts: TimelinePost[];
+};
+
 export type InsertRootPostInput = {
   authorId: string;
   content: string;
@@ -104,6 +113,44 @@ export async function findTimelinePage(
   const posts = pageRows.map((row) => mapTimelinePostFromUnknown(row));
 
   return { posts, hasMore };
+}
+
+/**
+ * Root posts by one author only, newest first, with reply counts.
+ * Replies (parent_post_id IS NOT NULL) are excluded.
+ */
+export async function findRootPostsByAuthorId(
+  params: FindRootPostsByAuthorIdParams,
+): Promise<FindRootPostsByAuthorIdResult> {
+  const { authorId, limit } = params;
+  if (!Number.isInteger(limit) || limit < 1) {
+    throw new RepositoryError(
+      "findRootPostsByAuthorId limit must be a positive integer",
+    );
+  }
+
+  const client = getSupabaseServerClient();
+  const { data, error } = await client
+    .from("posts")
+    .select(TIMELINE_POST_SELECT)
+    .eq("author_id", authorId)
+    .is("parent_post_id", null)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new RepositoryError("Failed to load profile root posts", {
+      cause: error,
+    });
+  }
+
+  if (data === null) {
+    throw new RepositoryError("Profile root posts query returned null data");
+  }
+
+  const posts = data.map((row) => mapTimelinePostFromUnknown(row));
+  return { posts };
 }
 
 /**

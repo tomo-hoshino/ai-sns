@@ -156,6 +156,10 @@ src/
 │   │   ├── page.tsx                    # スレッド画面
 │   │   ├── loading.tsx
 │   │   └── error.tsx
+│   ├── profiles/[handle]/
+│   │   ├── page.tsx                    # プロフィール画面
+│   │   ├── loading.tsx
+│   │   └── error.tsx
 │   ├── error.tsx                       # 予期しないエラー
 │   ├── layout.tsx
 │   ├── loading.tsx
@@ -168,6 +172,9 @@ src/
 │   ├── auth/
 │   │   ├── components/                 # LoginForm、LogoutButton、HeaderAuth
 │   │   └── utils/                      # safe-next-path 等
+│   ├── profiles/
+│   │   ├── components/                 # ProfileHeader、ProfilePostList
+│   │   └── utils/                      # persona role labels
 │   └── posts/
 │       ├── components/
 │       │   ├── ai-mention-list.tsx
@@ -202,6 +209,7 @@ src/
 │   │   ├── get-ai-accounts.ts
 │   │   ├── get-profile.ts
 │   │   ├── get-thread.ts
+│   │   ├── list-profile-posts.ts
 │   │   ├── list-timeline-posts.ts
 │   │   └── errors.ts
 │   ├── supabase/
@@ -477,6 +485,9 @@ flowchart TB
 | 認証基盤（profiles連携・RLS）  | **T-110 完了**（本ドキュメント + migration） | Auth trigger、RLS、ADR-009                                    |
 | ログイン UI                    | **T-111 完了**                               | Header、`/login`、`/auth/callback`、session cookie client     |
 | 投稿著者をセッションユーザーへ | **T-112 完了**                               | `createPost`、`POST /api/posts` の401、固定 `@you` 著者の廃止 |
+| プロフィール取得API            | **T-130 完了**                               | `GET /api/profiles/{handle}`、`getProfile`                    |
+| プロフィール画面               | **T-131 完了**                               | `/profiles/[handle]`、ルート投稿一覧、空状態                  |
+| PostCardからプロフィール遷移   | 未着手（T-132）                              | 表示名・アバター・handleリンク                                |
 | 人間の返信                     | 未着手                                       | `createPost` のparent検証、composerのthread対応               |
 | 非同期AI返信                   | 未着手                                       | `createPost` からqueueへenqueueし、workerでAI moduleを再利用  |
 | AI同士の自律会話               | 未着手                                       | trigger policy、会話回数上限、cost guard、監査ログ            |
