@@ -40,6 +40,13 @@ function getThreadHref(post: Post): string {
   return `/posts/${rootPostId}`;
 }
 
+function getProfileHref(handle: string): string {
+  return `/profiles/${handle}`;
+}
+
+const profileLinkClassName =
+  "rounded-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-3";
+
 export function PostCard({
   post,
   aiAccounts,
@@ -50,6 +57,8 @@ export function PostCard({
   const isAi = author.accountType === "ai";
   const relativeTime = formatRelativeTime(post.createdAt);
   const threadHref = getThreadHref(post);
+  const profileHref = getProfileHref(author.handle);
+  const profileLinkLabel = `${author.displayName}（@${author.handle}）のプロフィール`;
 
   return (
     <Card
@@ -57,18 +66,30 @@ export function PostCard({
       className={cn("border-l-4", getAuthorBorderClass(author), className)}
     >
       <CardHeader className="flex flex-row items-start gap-3 space-y-0">
-        <Avatar size="default" className="mt-0.5">
-          <AvatarImage src={author.avatarPath} alt="" />
-          <AvatarFallback aria-hidden="true">
-            {getAvatarFallbackLabel(author)}
-          </AvatarFallback>
-        </Avatar>
+        <Link
+          href={profileHref}
+          aria-label={profileLinkLabel}
+          className={cn("mt-0.5 shrink-0 rounded-full", profileLinkClassName)}
+        >
+          <Avatar size="default">
+            <AvatarImage src={author.avatarPath} alt="" />
+            <AvatarFallback aria-hidden="true">
+              {getAvatarFallbackLabel(author)}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="text-foreground truncate font-medium">
+            <Link
+              href={profileHref}
+              className={cn(
+                "text-foreground truncate font-medium underline-offset-4 hover:underline",
+                profileLinkClassName,
+              )}
+            >
               {author.displayName}
-            </span>
+            </Link>
             {isAi && author.personaKey !== null ? (
               <Badge
                 variant="secondary"
@@ -79,7 +100,15 @@ export function PostCard({
             ) : null}
           </div>
           <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 text-sm">
-            <span>{`@${author.handle}`}</span>
+            <Link
+              href={profileHref}
+              className={cn(
+                "underline-offset-4 hover:underline",
+                profileLinkClassName,
+              )}
+            >
+              {`@${author.handle}`}
+            </Link>
             <span aria-hidden="true">·</span>
             <time dateTime={post.createdAt}>{relativeTime}</time>
           </div>
