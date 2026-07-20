@@ -42,6 +42,33 @@ export async function findHumanAccountById(
 }
 
 /**
+ * Loads a human or AI profile by canonical handle.
+ * Returns null when no row matches (including legacy AI handle aliases).
+ */
+export async function findAccountByHandle(
+  handle: string,
+): Promise<Account | null> {
+  const client = getSupabaseServerClient();
+  const { data, error } = await client
+    .from("profiles")
+    .select(PROFILE_COLUMNS)
+    .eq("handle", handle)
+    .maybeSingle();
+
+  if (error) {
+    throw new RepositoryError("Failed to load account by handle", {
+      cause: error,
+    });
+  }
+
+  if (data === null) {
+    return null;
+  }
+
+  return mapAccountFromUnknown(data);
+}
+
+/**
  * Loads all AI accounts. Order is not guaranteed; callers that need a fixed
  * persona order must sort in the service layer.
  */

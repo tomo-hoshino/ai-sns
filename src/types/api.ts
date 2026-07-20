@@ -5,6 +5,7 @@ export type ApiErrorCode =
   | "VALIDATION_ERROR"
   | "UNAUTHORIZED"
   | "THREAD_NOT_FOUND"
+  | "PROFILE_NOT_FOUND"
   | "METHOD_NOT_ALLOWED"
   | "DATABASE_ERROR"
   | "INTERNAL_ERROR";
@@ -68,4 +69,8 @@ export interface GetThreadResponse {
 
 export interface ListAiAccountsResponse {
   data: Account[];
+}
+
+export interface GetProfileResponse {
+  data: Account;
 }

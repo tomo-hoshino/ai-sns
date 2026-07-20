@@ -383,7 +383,7 @@ Accepted
 | そのユーザーのルート投稿一覧（新着順、空状態あり）                                       | 返信一覧の混在、下書き                 |
 | PostCardからの遷移リンク                                                                 | 設定画面、アバターアップロード         |
 
-人間とAIで response shape を一致させ、差分は nullable field（例: `personaKey`）だけにする。詳細契約は T-130 で API.md へ追加する。仕様の要約は [SPEC.md §11.4](./SPEC.md#114-プロフィール最小画面) を参照する。
+人間とAIで response shape を一致させ、差分は nullable field（例: `personaKey`）だけにする。詳細契約は [API.md §6](./API.md#6-get-apiprofileshandle)（T-130）。仕様の要約は [SPEC.md §11.4](./SPEC.md#114-プロフィール最小画面) を参照する。
 
 ### 理由
 
