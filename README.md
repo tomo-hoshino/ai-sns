@@ -173,8 +173,8 @@ DB型の再生成が必要なときは `pnpm db:types` を使います。
 
 ## Production
 
-- Production URL: [https://ai-sns-six.vercel.app](https://ai-sns-six.vercel.app)
-- Vercel project: `hoshi-t/ai-sns`
+- Production URL: [https://ai-office-sns.vercel.app](https://ai-office-sns.vercel.app)
+- Vercel project: `hoshi-t/ai-office-sns`
 
 ## Vercelへデプロイ
 
@@ -203,7 +203,7 @@ DB型の再生成が必要なときは `pnpm db:types` を使います。
 
 デモ終了時や障害時は AI 返信を次の手順で止めます。
 
-1. Vercel Dashboard で project `hoshi-t/ai-sns` を開く。
+1. Vercel Dashboard で project `hoshi-t/ai-office-sns` を開く。
 2. Settings → Environment Variables で `AI_REPLIES_ENABLED` を `false` に変更する（Production を含む対象環境）。
 3. Production を再デプロイする（環境変数変更後の Redeploy）。
 4. 投稿は受け付けるが、AI 返信は生成されず API は `aiReplyStatus: "disabled"` を返すことを確認する。
