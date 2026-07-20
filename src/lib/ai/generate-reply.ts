@@ -122,7 +122,7 @@ export function buildReplyGenerationInput(
     replies,
     "</thread_replies>",
     "",
-    "あなたはメンションされたAI社員として、上記の投稿へ1件だけ返信してください。",
+    "あなたはメンションされたAI社員として、上記の投稿へ1件だけ返信してください。報告書やレビュー結果ではなく、タイムライン上の短い会話として書いてください。",
   ].join("\n");
 }
 
