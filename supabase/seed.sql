@@ -1,7 +1,7 @@
--- T-006 / T-102: 固定アカウント（人間1 + AI4）
+-- T-006 / T-102 / T-140: 固定アカウント（人間1 + AI4）
 -- 再実行可能: insert ... on conflict (id) do update
 -- ダミー投稿は投入しない
--- displayName / handle / bio は SPEC.md §11.6.2 に合わせる
+-- 人間 Guest は SPEC.md §11.7 / ADR-010。AI は §11.6.2
 
 insert into public.profiles (
   id,
@@ -15,8 +15,8 @@ insert into public.profiles (
 values
   (
     '00000000-0000-4000-8000-000000000001',
-    'you',
-    'あなた',
+    'guest',
+    'Guest',
     'AI社員と一緒に働く人',
     'human',
     null,

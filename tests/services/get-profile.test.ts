@@ -7,8 +7,8 @@ import type { Account } from "@/types/account";
 
 const humanAccount: Account = {
   id: "00000000-0000-4000-8000-000000000001",
-  handle: "you",
-  displayName: "あなた",
+  handle: "guest",
+  displayName: "Guest",
   bio: "AI社員と一緒に働く人",
   accountType: "human",
   personaKey: null,
@@ -29,12 +29,12 @@ describe("getProfile", () => {
   it("returns a human profile with null personaKey", async () => {
     const findAccountByHandle = vi.fn().mockResolvedValue(humanAccount);
 
-    const result = await getProfile({ handle: "you" }, { findAccountByHandle });
+    const result = await getProfile({ handle: "guest" }, { findAccountByHandle });
 
     expect(getProfileResponseSchema.safeParse(result).success).toBe(true);
     expect(result).toEqual({ data: humanAccount });
     expect(result.data.personaKey).toBeNull();
-    expect(findAccountByHandle).toHaveBeenCalledWith("you");
+    expect(findAccountByHandle).toHaveBeenCalledWith("guest");
   });
 
   it("returns an AI profile with the same response shape", async () => {

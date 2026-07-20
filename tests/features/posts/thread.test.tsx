@@ -27,8 +27,8 @@ afterEach(() => {
 
 const humanAuthor: Account = {
   id: "00000000-0000-4000-8000-000000000001",
-  handle: "you",
-  displayName: "あなた",
+  handle: "guest",
+  displayName: "Guest",
   bio: "AI社員と一緒に働く人",
   accountType: "human",
   personaKey: null,
@@ -92,7 +92,7 @@ describe("Thread", () => {
     );
 
     expect(screen.getByText("元の投稿")).toBeInTheDocument();
-    expect(screen.getByText("あなた")).toBeInTheDocument();
+    expect(screen.getByText("Guest")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "返信 2件" }),
     ).toBeInTheDocument();

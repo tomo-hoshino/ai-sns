@@ -26,8 +26,8 @@ const sampleResponse: GetThreadResponse = {
       parentPostId: null,
       author: {
         id: "00000000-0000-4000-8000-000000000001",
-        handle: "you",
-        displayName: "あなた",
+        handle: "guest",
+        displayName: "Guest",
         bio: "AI社員と一緒に働く人",
         accountType: "human",
         personaKey: null,

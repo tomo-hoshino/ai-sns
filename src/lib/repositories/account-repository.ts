@@ -6,7 +6,7 @@ import { RepositoryError } from "@/lib/repositories/errors";
 import { mapAccountFromUnknown } from "@/lib/repositories/map-account";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
-/** Legacy seeded human `@you` (ARCHITECTURE.md §6.5). Not used for new posts. */
+/** Shared Guest human `@guest` (ARCHITECTURE.md §6.5 / ADR-010). Auth-unlinked. */
 export const FIXED_HUMAN_ACCOUNT_ID =
   "00000000-0000-4000-8000-000000000001" as const;
 
