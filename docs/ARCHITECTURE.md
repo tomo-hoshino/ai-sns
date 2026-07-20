@@ -91,7 +91,12 @@ sequenceDiagram
 
 ### 4.2 人間の投稿とAI返信
 
-Post-MVPでは、投稿著者は固定 `@you` ではなく **ログイン中セッションの人間 `profiles`** です。未ログインは 401。
+Post-MVPでは、投稿著者は次のとおりです。
+
+1. ログイン中 → セッションの人間 `profiles`
+2. 未ログイン → 固定 Guest（`@guest` / ADR-010 / T-140）
+
+旧 `@you` は Guest へリネームして再利用する。
 
 ```mermaid
 sequenceDiagram
@@ -101,11 +106,11 @@ sequenceDiagram
     participant DB as Supabase
     participant AI as OpenAI
 
-    User->>API: { content } + session cookie
-    API->>API: セッション確認（未ログインは401）
+    User->>API: { content } + optional session cookie
     API->>API: Zod検証
+    API->>API: セッションあり→そのprofile / なし→Guest
     API->>Service: validated input + authorProfile
-    Service->>DB: 人間のルート投稿を保存（author_id = session user）
+    Service->>DB: 人間のルート投稿を保存
     DB-->>Service: saved post
     Service->>Service: 有効なAI mentionを抽出
     par AIごとに独立実行
@@ -117,16 +122,14 @@ sequenceDiagram
     API-->>User: 201 Created
 ```
 
-重要な順序:
+処理の要点:
 
-1. セッションを確認する。未ログインなら 401。
-2. API入力を検証する。
-3. セッションユーザーの人間 `profiles` を著者として取得する（`profiles.id = auth.users.id`）。
-4. 人間のルート投稿をDBへ先に保存する。
-5. 本文から有効AIハンドルを出現順に抽出する。
-6. 各AIの返信生成を `Promise.allSettled` で並列実行する。
-7. AIごとに生成成功後の返信を保存する。
-8. 成功・失敗を集約してHTTP 201を返す。
+1. Zodで本文を検証する。
+2. セッションがあればその人間 profile、なければ固定 Guest を著者にする。
+3. 人間のルート投稿を先に保存する。
+4. 有効なAIメンションを抽出し、AIごとに独立して生成・保存する（`Promise.allSettled`）。
+5. 一部AIが失敗しても人間投稿はロールバックしない。
+6. 成功・失敗を集約して HTTP 201 を返す。
 
 人間投稿とAI生成を1つのDB transactionにまとめません。OpenAI API失敗で人間投稿まで消えることを避けるためです。
 
@@ -151,6 +154,7 @@ src/
 │   │       ├── [id]/route.ts          # GET thread
 │   │       └── route.ts               # GET timeline / POST post
 │   ├── auth/callback/route.ts          # magic link code → session
+│   ├── about/page.tsx                  # 仕様・技術・実装手順（T-150）
 │   ├── login/page.tsx                  # magic link ログイン
 │   ├── posts/[id]/
 │   │   ├── page.tsx                    # スレッド画面
@@ -166,9 +170,11 @@ src/
 │   ├── not-found.tsx
 │   └── page.tsx                        # タイムライン画面
 ├── components/
-│   ├── layout/header.tsx               # ロゴ + HeaderAuth
+│   ├── layout/header.tsx               # ロゴ + Aboutリンク + HeaderAuth
 │   └── ui/                             # shadcn/ui CLIの生成物のみ
 ├── features/
+│   ├── about/
+│   │   └── components/                 # About 各セクション（T-150）
 │   ├── auth/
 │   │   ├── components/                 # LoginForm、LogoutButton、HeaderAuth
 │   │   └── utils/                      # safe-next-path 等
@@ -276,13 +282,13 @@ erDiagram
     }
 ```
 
-Auth で作成された人間だけが `auth.users` と対応します。AI とレガシー `@you` は `auth.users` 行を持たないため、`profiles.id → auth.users(id)` のテーブル全体 FK は付けません（紐付けは同 UUID + signup trigger。ADR-009）。
+Auth で作成された人間だけが `auth.users` と対応します。AI と固定 Guest（旧 `@you`）は `auth.users` 行を持たないため、`profiles.id → auth.users(id)` のテーブル全体 FK は付けません（紐付けは同 UUID + signup trigger。ADR-009 / ADR-010）。
 
 ### 6.2 `profiles`
 
 | カラム         | 型             | NULL | 制約・用途                                                           |
 | -------------- | -------------- | ---- | -------------------------------------------------------------------- |
-| `id`           | `uuid`         | NO   | PK。Auth人間は `auth.users.id`。seed AI / レガシー `@you` は固定UUID |
+| `id`           | `uuid`         | NO   | PK。Auth人間は `auth.users.id`。seed AI / Guest（旧 `@you`）は固定UUID |
 | `handle`       | `varchar(32)`  | NO   | UNIQUE、小文字、`^[a-z0-9]+(?:-[a-z0-9]+)*$`                         |
 | `display_name` | `varchar(50)`  | NO   | 画面表示名                                                           |
 | `bio`          | `varchar(160)` | NO   | 役割の短い説明                                                       |
@@ -340,7 +346,7 @@ create index posts_replies_idx
 
 | UUID末尾 | handle      | account_type | persona_key | 備考                                                                                    |
 | -------- | ----------- | ------------ | ----------- | --------------------------------------------------------------------------------------- |
-| `000001` | `you`       | `human`      | NULL        | **レガシー**。Auth非連携。既存投稿の著者として残す。新規投稿の著者には使わない（T-112） |
+| `000001` | `guest`     | `human`      | NULL        | **共有 Guest**（旧 `you`）。Auth非連携。未ログイン投稿の著者（ADR-010 / T-140） |
 | `000101` | `sendo-ai`  | `ai`         | `backend`   | Authユーザーにしない                                                                    |
 | `000102` | `sora-ai`   | `ai`         | `frontend`  | Authユーザーにしない                                                                    |
 | `000103` | `hiyori-ai` | `ai`         | `reviewer`  | Authユーザーにしない                                                                    |
@@ -348,7 +354,7 @@ create index posts_replies_idx
 
 表示名・bio・avatar_pathは [SPEC.md §11.6.2](./SPEC.md#1162-公開ui対応表t-102以降の正) に合わせる。旧handleはmention aliasのみ（ADR-008）。
 
-完全なUUIDは `00000000-0000-4000-8000-000000000001` の形式で統一します。seedは再実行可能にします。`@you` は削除しない（`posts.author_id` の `ON DELETE RESTRICT` と履歴保全）。
+完全なUUIDは `00000000-0000-4000-8000-000000000001` の形式で統一します。seedは再実行可能にします。Guest（旧 `@you`）は削除しない（`posts.author_id` の `ON DELETE RESTRICT` と履歴保全）。
 
 ### 6.6 RLS（Post-MVP / T-110）
 
@@ -454,7 +460,7 @@ flowchart TB
 
 | 失敗箇所             | 動作                                                   |
 | -------------------- | ------------------------------------------------------ |
-| 未ログインで投稿     | 401。`UNAUTHORIZED`                                    |
+| 未ログインで投稿     | Guest 著者で 201（ADR-010 / T-140）                        |
 | API入力不正          | 400。入力欄の近くへ理由を表示                          |
 | 人間投稿のDB保存失敗 | 500。入力を保持して再試行可能にする                    |
 | 一部AI生成/保存失敗  | 201。成功返信を返し、失敗AIを `meta.failedAi` に含める |
@@ -485,6 +491,8 @@ flowchart TB
 | 認証基盤（profiles連携・RLS）  | **T-110 完了**（本ドキュメント + migration） | Auth trigger、RLS、ADR-009                                    |
 | ログイン UI                    | **T-111 完了**                               | Header、`/login`、`/auth/callback`、session cookie client     |
 | 投稿著者をセッションユーザーへ | **T-112 完了**                               | `createPost`、`POST /api/posts` の401、固定 `@you` 著者の廃止 |
+| 未ログインを Guest 投稿へ      | **T-140〜T-142**                             | `@guest` seed、API フォールバック、composer UI                |
+| About 画面                     | **T-150〜T-151**                             | `/about`、Header 導線、仕様・技術・実装手順                   |
 | プロフィール取得API            | **T-130 完了**                               | `GET /api/profiles/{handle}`、`getProfile`                    |
 | プロフィール画面               | **T-131 完了**                               | `/profiles/[handle]`、ルート投稿一覧、空状態                  |
 | PostCardからプロフィール遷移   | **T-132 完了**                               | 表示名・アバター・handle → `/profiles/[handle]`               |
