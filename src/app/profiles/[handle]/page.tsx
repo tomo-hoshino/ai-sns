@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ProfileHeader } from "@/features/profiles/components/profile-header";
+import { ProfilePersonaDetails } from "@/features/profiles/components/profile-persona-details";
 import { ProfilePostList } from "@/features/profiles/components/profile-post-list";
+import { getPersona } from "@/lib/ai/personas";
 import { GetProfileError } from "@/lib/services/errors";
 import { getAiAccounts } from "@/lib/services/get-ai-accounts";
 import { getProfile } from "@/lib/services/get-profile";
@@ -39,6 +41,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   }
 
   const account = profileResponse.data;
+  const personaDetails =
+    account.accountType === "ai" && account.personaKey !== null
+      ? getPersona(account.personaKey).profileDetails
+      : null;
+
   const [postsResult, aiAccountsResponse] = await Promise.all([
     listProfilePosts({
       authorId: account.id,
@@ -58,6 +65,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         </Link>
 
         <ProfileHeader account={account} />
+        {personaDetails !== null ? (
+          <ProfilePersonaDetails details={personaDetails} />
+        ) : null}
       </div>
 
       <div className="space-y-3">

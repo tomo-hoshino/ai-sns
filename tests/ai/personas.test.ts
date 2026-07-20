@@ -76,6 +76,20 @@ describe("PERSONAS", () => {
     }
   });
 
+  it("includes display-only profileDetails for every persona", () => {
+    for (const key of PERSONA_KEYS) {
+      const { profileDetails } = PERSONAS[key];
+
+      expect(profileDetails.summary.length).toBeGreaterThan(0);
+      expect(profileDetails.speakingStyle.length).toBeGreaterThan(0);
+      expect(profileDetails.focusPoints.length).toBeGreaterThanOrEqual(2);
+      expect(profileDetails.focusPoints.length).toBeLessThanOrEqual(4);
+      for (const point of profileDetails.focusPoints) {
+        expect(point.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
   it("keeps system prompts identical to PROMPTS.md completed prompts", () => {
     const promptsPath = path.resolve(process.cwd(), "docs/PROMPTS.md");
     const markdown = readFileSync(promptsPath, "utf8");
