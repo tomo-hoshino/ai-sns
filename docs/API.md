@@ -6,7 +6,7 @@
 
 ```text
 Local:      http://localhost:3000/api
-Production: https://ai-sns-six.vercel.app/api
+Production: https://ai-office-sns.vercel.app/api
 ```
 
 ### データ形式
