@@ -18,6 +18,10 @@ const createPostMock = vi.fn();
 const getSessionUserMock = vi.fn();
 const findHumanAccountByIdMock = vi.fn();
 
+const { FIXED_HUMAN_ACCOUNT_ID } = vi.hoisted(() => ({
+  FIXED_HUMAN_ACCOUNT_ID: "00000000-0000-4000-8000-000000000001" as const,
+}));
+
 vi.mock("@/lib/services/create-post", () => ({
   createPost: (...args: unknown[]) => createPostMock(...args),
 }));
@@ -27,6 +31,7 @@ vi.mock("@/lib/supabase/get-session-user", () => ({
 }));
 
 vi.mock("@/lib/repositories/account-repository", () => ({
+  FIXED_HUMAN_ACCOUNT_ID,
   findHumanAccountById: (...args: unknown[]) =>
     findHumanAccountByIdMock(...args),
 }));
@@ -44,6 +49,16 @@ const humanAuthor: Account = {
   accountType: "human",
   personaKey: null,
   avatarPath: "/avatars/default-human.png",
+};
+
+const guestAuthor: Account = {
+  id: FIXED_HUMAN_ACCOUNT_ID,
+  handle: "guest",
+  displayName: "Guest",
+  bio: "AI社員と一緒に働く人",
+  accountType: "human",
+  personaKey: null,
+  avatarPath: "/avatars/you.png",
 };
 
 const backendAiAuthor: Account = {
@@ -129,25 +144,33 @@ describe("POST /api/posts", () => {
     findHumanAccountByIdMock.mockResolvedValue(humanAuthor);
   });
 
-  it("returns 401 UNAUTHORIZED when there is no session", async () => {
+  it("returns 201 with Guest author when there is no session", async () => {
     getSessionUserMock.mockResolvedValue(null);
+    findHumanAccountByIdMock.mockResolvedValue(guestAuthor);
+    createPostMock.mockResolvedValue({
+      ...successResult,
+      post: { ...rootPost, author: guestAuthor },
+    });
 
     const response = await POST(
       createPostRequest({ content: "今日の進捗を共有します" }),
     );
     const body: unknown = await response.json();
 
-    expect(response.status).toBe(401);
-    expect(createPostMock).not.toHaveBeenCalled();
-    expect(findHumanAccountByIdMock).not.toHaveBeenCalled();
-    expect(apiErrorResponseSchema.safeParse(body).success).toBe(true);
-    expect(body).toMatchObject({
-      error: {
-        code: "UNAUTHORIZED",
-        message: "ログインが必要です。",
-      },
+    expect(response.status).toBe(201);
+    expect(findHumanAccountByIdMock).toHaveBeenCalledWith(
+      FIXED_HUMAN_ACCOUNT_ID,
+    );
+    expect(createPostMock).toHaveBeenCalledWith({
+      content: "今日の進捗を共有します",
+      author: guestAuthor,
     });
-    expect(typeof (body as { requestId: string }).requestId).toBe("string");
+
+    const typed = body as CreatePostResponse;
+    expect(typed.data.post.author.id).toBe(FIXED_HUMAN_ACCOUNT_ID);
+    expect(typed.data.post.author.handle).toBe("guest");
+    expect(typed.meta.aiReplyStatus).toBe("not_requested");
+    expect(typeof typed.requestId).toBe("string");
   });
 
   it("returns 201 with aiReplyStatus not_requested when there are no mentions", async () => {
@@ -423,6 +446,26 @@ describe("POST /api/posts", () => {
     const body: unknown = await response.json();
 
     expect(response.status).toBe(500);
+    expect(createPostMock).not.toHaveBeenCalled();
+    expect(body).toMatchObject({
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "サーバーでエラーが発生しました。",
+      },
+    });
+  });
+
+  it("returns 500 INTERNAL_ERROR when the Guest profile is missing", async () => {
+    getSessionUserMock.mockResolvedValue(null);
+    findHumanAccountByIdMock.mockResolvedValue(null);
+
+    const response = await POST(createPostRequest({ content: "Guest不在" }));
+    const body: unknown = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(findHumanAccountByIdMock).toHaveBeenCalledWith(
+      FIXED_HUMAN_ACCOUNT_ID,
+    );
     expect(createPostMock).not.toHaveBeenCalled();
     expect(body).toMatchObject({
       error: {

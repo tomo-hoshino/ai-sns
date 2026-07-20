@@ -22,7 +22,10 @@ import type { Post } from "@/types/post";
 export type CreatePostInput = {
   /** Trimmed post body (1–300 Unicode code points). Validated at the API boundary. */
   content: string;
-  /** Session user's human profile. Author is never taken from the request body. */
+  /**
+   * Human author resolved by the Route Handler: session profile when logged in,
+   * shared Guest (`@guest`) when not. Never taken from the request body.
+   */
   author: Account;
 };
 
