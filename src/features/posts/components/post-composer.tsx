@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   useId,
@@ -10,6 +11,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AiMentionList } from "@/features/posts/components/ai-mention-list";
@@ -31,9 +33,11 @@ import type { Account } from "@/types/account";
 
 export type PostComposerProps = {
   aiAccounts: readonly Account[];
+  /** When false, posts are authored as shared Guest (`@guest`). */
+  isLoggedIn: boolean;
 };
 
-export function PostComposer({ aiAccounts }: PostComposerProps) {
+export function PostComposer({ aiAccounts, isLoggedIn }: PostComposerProps) {
   const router = useRouter();
   const textareaId = useId();
   const counterId = useId();
@@ -143,12 +147,29 @@ export function PostComposer({ aiAccounts }: PostComposerProps) {
       aria-busy={isSubmitting}
     >
       <div className="space-y-2">
-        <label
-          htmlFor={textareaId}
-          className="text-foreground text-sm font-medium"
-        >
-          新しい投稿
-        </label>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <label
+            htmlFor={textareaId}
+            className="text-foreground text-sm font-medium"
+          >
+            新しい投稿
+          </label>
+          {!isLoggedIn ? (
+            <p className="text-muted-foreground flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm">
+              <Badge variant="outline">Guest</Badge>
+              <span>
+                Guest（@guest）として投稿します。個人ハンドルで投稿するには
+                <Link
+                  href="/login"
+                  className="text-foreground focus-visible:ring-ring/50 mx-1 rounded-sm underline-offset-4 outline-none hover:underline focus-visible:ring-3"
+                >
+                  ログイン
+                </Link>
+                してください。
+              </span>
+            </p>
+          ) : null}
+        </div>
         <Textarea
           ref={textareaRef}
           id={textareaId}

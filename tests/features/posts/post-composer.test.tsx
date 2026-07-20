@@ -93,9 +93,68 @@ beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn());
 });
 
+describe("PostComposer guest posting notice", () => {
+  it("shows Guest posting notice and login link when logged out", () => {
+    render(<PostComposer aiAccounts={aiAccounts} isLoggedIn={false} />);
+
+    expect(
+      screen.getByText("Guest", { selector: "[data-slot='badge']" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Guest（@guest）として投稿します/),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "ログイン" })).toHaveAttribute(
+      "href",
+      "/login",
+    );
+    expect(screen.getByLabelText("新しい投稿")).toBeEnabled();
+    expect(screen.getByRole("button", { name: "投稿する" })).toBeDisabled();
+  });
+
+  it("hides Guest posting notice when logged in", () => {
+    render(<PostComposer aiAccounts={aiAccounts} isLoggedIn />);
+
+    expect(
+      screen.queryByText(/Guest（@guest）として投稿します/),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "ログイン" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("submits successfully while logged out (Guest author is server-side)", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify(
+          createSuccessResponse({
+            aiReplyStatus: "not_requested",
+            mentionedAiHandles: [],
+            succeededAiHandles: [],
+            failedAi: [],
+          }),
+        ),
+        { status: 201, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    render(<PostComposer aiAccounts={aiAccounts} isLoggedIn={false} />);
+
+    await user.type(screen.getByLabelText("新しい投稿"), "ゲスト投稿");
+    await user.click(screen.getByRole("button", { name: "投稿する" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+    expect(toastSuccess).toHaveBeenCalledWith("投稿しました。");
+    expect(refreshMock).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("PostComposer character limits", () => {
   it("keeps submit disabled for 0 characters", () => {
-    render(<PostComposer aiAccounts={aiAccounts} />);
+    render(<PostComposer aiAccounts={aiAccounts} isLoggedIn />);
 
     expect(screen.getByRole("button", { name: "投稿する" })).toBeDisabled();
     expect(screen.getByLabelText("新しい投稿")).toHaveValue("");
@@ -119,7 +178,7 @@ describe("PostComposer character limits", () => {
       ),
     );
 
-    render(<PostComposer aiAccounts={aiAccounts} />);
+    render(<PostComposer aiAccounts={aiAccounts} isLoggedIn />);
 
     const textarea = screen.getByLabelText("新しい投稿");
     await user.type(textarea, "あ");
@@ -142,7 +201,7 @@ describe("PostComposer character limits", () => {
 
   it("allows exactly 300 characters", async () => {
     const user = userEvent.setup();
-    render(<PostComposer aiAccounts={aiAccounts} />);
+    render(<PostComposer aiAccounts={aiAccounts} isLoggedIn />);
 
     const content = "あ".repeat(300);
     const textarea = screen.getByLabelText("新しい投稿");
@@ -159,7 +218,7 @@ describe("PostComposer character limits", () => {
 
   it("prevents 301 characters by clamping input", async () => {
     const user = userEvent.setup();
-    render(<PostComposer aiAccounts={aiAccounts} />);
+    render(<PostComposer aiAccounts={aiAccounts} isLoggedIn />);
 
     const textarea = screen.getByLabelText("新しい投稿");
     await user.click(textarea);
@@ -175,7 +234,7 @@ describe("PostComposer character limits", () => {
 describe("PostComposer mentions and API outcomes", () => {
   it("inserts a mention at the cursor without destroying existing text", async () => {
     const user = userEvent.setup();
-    render(<PostComposer aiAccounts={aiAccounts} />);
+    render(<PostComposer aiAccounts={aiAccounts} isLoggedIn />);
 
     const textarea = screen.getByLabelText("新しい投稿") as HTMLTextAreaElement;
     await user.type(textarea, "確認お願いします");
@@ -206,7 +265,7 @@ describe("PostComposer mentions and API outcomes", () => {
       ),
     );
 
-    render(<PostComposer aiAccounts={aiAccounts} />);
+    render(<PostComposer aiAccounts={aiAccounts} isLoggedIn />);
 
     const textarea = screen.getByLabelText("新しい投稿");
     await user.type(textarea, "保存してほしい本文");
@@ -237,7 +296,7 @@ describe("PostComposer mentions and API outcomes", () => {
       ),
     );
 
-    render(<PostComposer aiAccounts={aiAccounts} />);
+    render(<PostComposer aiAccounts={aiAccounts} isLoggedIn />);
     await user.type(screen.getByLabelText("新しい投稿"), "完了テスト");
     await user.click(screen.getByRole("button", { name: "投稿する" }));
 
@@ -267,7 +326,7 @@ describe("PostComposer mentions and API outcomes", () => {
       ),
     );
 
-    render(<PostComposer aiAccounts={aiAccounts} />);
+    render(<PostComposer aiAccounts={aiAccounts} isLoggedIn />);
     await user.type(screen.getByLabelText("新しい投稿"), "部分失敗テスト");
     await user.click(screen.getByRole("button", { name: "投稿する" }));
 
@@ -298,7 +357,9 @@ describe("PostComposer mentions and API outcomes", () => {
       ),
     );
 
-    const { unmount } = render(<PostComposer aiAccounts={aiAccounts} />);
+    const { unmount } = render(
+      <PostComposer aiAccounts={aiAccounts} isLoggedIn />,
+    );
     await user.type(screen.getByLabelText("新しい投稿"), "全失敗");
     await user.click(screen.getByRole("button", { name: "投稿する" }));
 
@@ -323,7 +384,7 @@ describe("PostComposer mentions and API outcomes", () => {
       ),
     );
 
-    render(<PostComposer aiAccounts={aiAccounts} />);
+    render(<PostComposer aiAccounts={aiAccounts} isLoggedIn />);
     await user.type(screen.getByLabelText("新しい投稿"), "無効");
     await user.click(screen.getByRole("button", { name: "投稿する" }));
 
@@ -345,7 +406,7 @@ describe("PostComposer mentions and API outcomes", () => {
         }),
     );
 
-    render(<PostComposer aiAccounts={aiAccounts} />);
+    render(<PostComposer aiAccounts={aiAccounts} isLoggedIn />);
     await user.type(screen.getByLabelText("新しい投稿"), "二重送信防止");
     await user.click(screen.getByRole("button", { name: "投稿する" }));
 

@@ -94,7 +94,7 @@ sequenceDiagram
 Post-MVPでは、投稿著者は次のとおりです。
 
 1. ログイン中 → セッションの人間 `profiles`
-2. 未ログイン → 固定 Guest（`@guest` / ADR-010）。seed / migration は T-140、API フォールバックは **T-141 完了**
+2. 未ログイン → 固定 Guest（`@guest` / ADR-010）。seed / migration は T-140、API は T-141、composer UI は **T-142 完了**
 
 旧 `@you`（UUID `...0001`）は Guest へリネームして再利用する（T-140）。
 
@@ -491,7 +491,7 @@ flowchart TB
 | 認証基盤（profiles連携・RLS）  | **T-110 完了**（本ドキュメント + migration） | Auth trigger、RLS、ADR-009                                    |
 | ログイン UI                    | **T-111 完了**                               | Header、`/login`、`/auth/callback`、session cookie client     |
 | 投稿著者をセッションユーザーへ | **T-112 完了**                               | `createPost`、`POST /api/posts` の401、固定 `@you` 著者の廃止 |
-| 未ログインを Guest 投稿へ      | **T-141 完了**（API）。T-142 は UI           | `@guest` seed、API フォールバック、composer UI                |
+| 未ログインを Guest 投稿へ      | **T-142 完了**（API T-141 + UI）             | `@guest` seed、API フォールバック、composer Guest 表示        |
 | About 画面                     | **T-150〜T-151**                             | `/about`、Header 導線、仕様・技術・実装手順                   |
 | プロフィール取得API            | **T-130 完了**                               | `GET /api/profiles/{handle}`、`getProfile`                    |
 | プロフィール画面               | **T-131 完了**                               | `/profiles/[handle]`、ルート投稿一覧、空状態                  |

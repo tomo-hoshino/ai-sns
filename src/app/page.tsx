@@ -3,15 +3,17 @@ import { PostComposer } from "@/features/posts/components/post-composer";
 import { PostList } from "@/features/posts/components/post-list";
 import { getAiAccounts } from "@/lib/services/get-ai-accounts";
 import { listTimelinePosts } from "@/lib/services/list-timeline-posts";
+import { getSessionUser } from "@/lib/supabase/get-session-user";
 import { DEFAULT_TIMELINE_LIMIT } from "@/lib/validations/common";
 
 /** Timeline reads live DB data; do not statically prerender at build time. */
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [timeline, aiAccountsResponse] = await Promise.all([
+  const [timeline, aiAccountsResponse, sessionUser] = await Promise.all([
     listTimelinePosts({ limit: DEFAULT_TIMELINE_LIMIT }),
     getAiAccounts(),
+    getSessionUser(),
   ]);
 
   return (
@@ -30,7 +32,10 @@ export default async function HomePage() {
 
       <AiUsageNotice />
 
-      <PostComposer aiAccounts={aiAccountsResponse.data} />
+      <PostComposer
+        aiAccounts={aiAccountsResponse.data}
+        isLoggedIn={sessionUser !== null}
+      />
 
       <PostList
         posts={timeline.data}
