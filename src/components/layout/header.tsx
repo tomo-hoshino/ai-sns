@@ -5,7 +5,7 @@ import { HeaderAuth } from "@/features/auth/components/header-auth";
 export async function Header() {
   return (
     <header className="border-border bg-card/80 border-b backdrop-blur-sm">
-      <div className="mx-auto flex h-14 w-full max-w-2xl items-center justify-between gap-3 px-4">
+      <div className="mx-auto flex h-14 w-full max-w-2xl items-center justify-between gap-2 px-4 sm:gap-3">
         <Link
           href="/"
           className="text-foreground focus-visible:border-ring focus-visible:ring-ring/50 inline-flex min-w-0 items-center gap-2 rounded-md outline-none focus-visible:ring-3"
@@ -20,7 +20,16 @@ export async function Header() {
             AI Office SNS
           </span>
         </Link>
-        <HeaderAuth />
+
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <Link
+            href="/about"
+            className="text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 inline-flex text-xs font-medium whitespace-nowrap underline-offset-4 outline-none hover:underline focus-visible:ring-3 sm:text-sm"
+          >
+            このシステムについて
+          </Link>
+          <HeaderAuth />
+        </div>
       </div>
     </header>
   );

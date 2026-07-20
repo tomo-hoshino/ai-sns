@@ -20,7 +20,7 @@ export async function HeaderAuth() {
   return (
     <div className="flex min-w-0 items-center gap-2">
       <span
-        className="text-muted-foreground max-w-36 truncate text-xs sm:max-w-48 sm:text-sm"
+        className="text-muted-foreground max-w-20 truncate text-xs sm:max-w-48 sm:text-sm"
         title={label}
       >
         {label}
