@@ -20,20 +20,20 @@ Production: https://ai-sns-six.vercel.app/api
 
 ### 認証
 
-| 項目             | 内容                                                                                          |
-| ---------------- | --------------------------------------------------------------------------------------------- |
-| 方式             | Supabase Auth + メール magic link（OTP / リンクログイン）のみ                                 |
-| Session          | HTTP-only cookie（Supabase Auth）。ブラウザから Data API へ直接書込しない                     |
-| 未ログインで許可 | `GET /api/posts`、`GET /api/posts/{id}`、`GET /api/ai-accounts`、`GET /api/profiles/{handle}`、**`POST /api/posts`（著者は Guest / T-140）** |
-| 未ログインで拒否 | （投稿は拒否しない。T-112 時点の 401 は ADR-010 / T-140 で廃止）                              |
-| 投稿著者         | ログイン中 → セッションの人間 `profiles`。未ログイン → 固定 Guest（`@guest`）                 |
-| 使わない         | パスワード、OAuth。Guest 以外の共有ハンドル切替                                               |
+| 項目             | 内容                                                                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 方式             | Supabase Auth + メール magic link（OTP / リンクログイン）のみ                                                                        |
+| Session          | HTTP-only cookie（Supabase Auth）。ブラウザから Data API へ直接書込しない                                                            |
+| 未ログインで許可 | `GET /api/posts`、`GET /api/posts/{id}`、`GET /api/ai-accounts`、`GET /api/profiles/{handle}`、**`POST /api/posts`（著者は Guest）** |
+| 未ログインで拒否 | （投稿は拒否しない。T-112 時点の 401 は ADR-010 / T-141 で廃止）                                                                     |
+| 投稿著者         | ログイン中 → セッションの人間 `profiles`。未ログイン → 固定 Guest（`@guest`）                                                        |
+| 使わない         | パスワード、OAuth。Guest 以外の共有ハンドル切替                                                                                      |
 
 実装タイミング:
 
-- **契約（本節・§3）**: T-110 で確定 → **Guest 投稿は T-140 で更新**
+- **契約（本節・§3）**: T-110 で確定 → Guest 投稿契約は T-140
 - **ログイン UI**: T-111
-- **Route Handler / `createPost` 反映**: T-112（ログイン著者）→ T-141（Guest フォールバック）
+- **Route Handler / `createPost` 反映**: T-112（ログイン著者）→ **T-141 完了**（Guest フォールバック）
 
 ### 共通Account
 
@@ -185,10 +185,10 @@ Accept: application/json
 
 ルート投稿を作成し、有効なAIメンションがあれば返信を生成します。
 
-| セッション           | 著者                                                         |
-| -------------------- | ------------------------------------------------------------ |
-| ログイン中           | セッションの人間 `profiles`（`profiles.id = auth.users.id`） |
-| 未ログイン（T-140〜）| 固定 Guest（`@guest`）。UUID は旧 `@you` と同一（ADR-010）   |
+| セッション | 著者                                                         |
+| ---------- | ------------------------------------------------------------ |
+| ログイン中 | セッションの人間 `profiles`（`profiles.id = auth.users.id`） |
+| 未ログイン | 固定 Guest（`@guest`）。UUID は旧 `@you` と同一（ADR-010）   |
 
 著者 ID は body では受け取らず、サーバー側で決定します。
 
@@ -355,13 +355,13 @@ interface CreatePostResponse {
 
 ### Errors
 
-| Status | code               | 条件                                            | 人間投稿         |
-| ------ | ------------------ | ----------------------------------------------- | ---------------- |
-| 400    | `VALIDATION_ERROR` | JSON不正、未知項目、文字数不正                  | 作成しない       |
-| 500    | `DATABASE_ERROR`   | 人間投稿の保存失敗                              | 作成されていない |
-| 500    | `INTERNAL_ERROR`   | セッションユーザーまたは Guest の profile 不在  | 作成保証なし     |
+| Status | code               | 条件                                           | 人間投稿         |
+| ------ | ------------------ | ---------------------------------------------- | ---------------- |
+| 400    | `VALIDATION_ERROR` | JSON不正、未知項目、文字数不正                 | 作成しない       |
+| 500    | `DATABASE_ERROR`   | 人間投稿の保存失敗                             | 作成されていない |
+| 500    | `INTERNAL_ERROR`   | セッションユーザーまたは Guest の profile 不在 | 作成保証なし     |
 
-`UNAUTHORIZED`（401）は T-140 以降、未ログイン投稿では使わない。セッション cookie が壊れていても Guest へフォールバックしてよい（実装は T-141）。
+`UNAUTHORIZED`（401）は未ログイン投稿では使わない。セッション cookie が壊れていても Guest へフォールバックしてよい（T-141）。
 
 AI生成・AI返信保存の失敗は共通エラーへせず、201の `meta.failedAi` へ含めます。OpenAI 失敗を HTTP 500 へ変換しません。
 

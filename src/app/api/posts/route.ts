@@ -7,10 +7,12 @@ import {
   internalErrorResponse,
   jsonError,
   jsonOk,
-  unauthorizedErrorResponse,
   validationErrorResponse,
 } from "@/lib/api/response";
-import { findHumanAccountById } from "@/lib/repositories/account-repository";
+import {
+  FIXED_HUMAN_ACCOUNT_ID,
+  findHumanAccountById,
+} from "@/lib/repositories/account-repository";
 import { RepositoryError } from "@/lib/repositories/errors";
 import { createPost } from "@/lib/services/create-post";
 import { CreatePostError } from "@/lib/services/errors";
@@ -51,11 +53,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const requestId = createRequestId();
 
-  const sessionUser = await getSessionUser();
-  if (sessionUser === null) {
-    return unauthorizedErrorResponse(requestId);
-  }
-
   const parsedBody = await parseJsonBody(request);
   if (!parsedBody.ok) {
     return jsonParseErrorResponse(requestId, parsedBody.reason);
@@ -66,7 +63,7 @@ export async function POST(request: NextRequest) {
     return validationErrorResponse(requestId, parsedRequest.error);
   }
 
-  const authorResult = await loadSessionAuthor(sessionUser.id, requestId);
+  const authorResult = await resolvePostAuthor(requestId);
   if (!authorResult.ok) {
     return authorResult.response;
   }
@@ -98,14 +95,21 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function loadSessionAuthor(
-  userId: string,
+/**
+ * Session human when logged in; shared Guest (`@guest`) when not.
+ * Missing profile → 500 INTERNAL_ERROR (ADR-010 / T-141).
+ */
+async function resolvePostAuthor(
   requestId: string,
 ): Promise<
   { ok: true; author: Account } | { ok: false; response: NextResponse }
 > {
+  const sessionUser = await getSessionUser();
+  const authorId =
+    sessionUser === null ? FIXED_HUMAN_ACCOUNT_ID : sessionUser.id;
+
   try {
-    const author = await findHumanAccountById(userId);
+    const author = await findHumanAccountById(authorId);
     if (author === null) {
       return { ok: false, response: internalErrorResponse(requestId) };
     }
