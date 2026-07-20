@@ -24,16 +24,16 @@ Production: https://ai-sns-six.vercel.app/api
 | ---------------- | --------------------------------------------------------------------------------------------- |
 | 方式             | Supabase Auth + メール magic link（OTP / リンクログイン）のみ                                 |
 | Session          | HTTP-only cookie（Supabase Auth）。ブラウザから Data API へ直接書込しない                     |
-| 未ログインで許可 | `GET /api/posts`、`GET /api/posts/{id}`、`GET /api/ai-accounts`、`GET /api/profiles/{handle}` |
-| 未ログインで拒否 | `POST /api/posts` → **401** `UNAUTHORIZED`                                                    |
-| 投稿著者         | ログイン中セッションの人間 `profiles`（`profiles.id = auth.users.id`）                        |
-| 使わない         | 固定 `@you` への新規投稿、パスワード、OAuth                                                   |
+| 未ログインで許可 | `GET /api/posts`、`GET /api/posts/{id}`、`GET /api/ai-accounts`、`GET /api/profiles/{handle}`、**`POST /api/posts`（著者は Guest / T-140）** |
+| 未ログインで拒否 | （投稿は拒否しない。T-112 時点の 401 は ADR-010 / T-140 で廃止）                              |
+| 投稿著者         | ログイン中 → セッションの人間 `profiles`。未ログイン → 固定 Guest（`@guest`）                 |
+| 使わない         | パスワード、OAuth。Guest 以外の共有ハンドル切替                                               |
 
 実装タイミング:
 
-- **契約（本節・§3）**: T-110 で確定
+- **契約（本節・§3）**: T-110 で確定 → **Guest 投稿は T-140 で更新**
 - **ログイン UI**: T-111
-- **Route Handler / `createPost` 反映**: T-112
+- **Route Handler / `createPost` 反映**: T-112（ログイン著者）→ T-141（Guest フォールバック）
 
 ### 共通Account
 
@@ -183,9 +183,14 @@ Accept: application/json
 
 ## 3. `POST /api/posts`
 
-ログイン中ユーザーの人間 `profiles` を著者としてルート投稿を作成し、有効なAIメンションがあれば返信を生成します。固定 `@you` への新規投稿は行いません（レガシーアカウント。ADR-009）。
+ルート投稿を作成し、有効なAIメンションがあれば返信を生成します。
 
-未ログインは **401** `UNAUTHORIZED` です。
+| セッション           | 著者                                                         |
+| -------------------- | ------------------------------------------------------------ |
+| ログイン中           | セッションの人間 `profiles`（`profiles.id = auth.users.id`） |
+| 未ログイン（T-140〜）| 固定 Guest（`@guest`）。UUID は旧 `@you` と同一（ADR-010）   |
+
+著者 ID は body では受け取らず、サーバー側で決定します。
 
 ### Request body
 
@@ -199,7 +204,7 @@ interface CreatePostRequest {
 | --------- | ---- | ---------------- |
 | `content` | Yes  | trim後1〜300文字 |
 
-未知のプロパティは無視せず、Zodのstrict objectで拒否します。著者 ID は body では受け取らず、セッションからのみ決定します。
+未知のプロパティは無視せず、Zodのstrict objectで拒否します。
 
 ### Request example
 
@@ -352,10 +357,11 @@ interface CreatePostResponse {
 
 | Status | code               | 条件                                            | 人間投稿         |
 | ------ | ------------------ | ----------------------------------------------- | ---------------- |
-| 401    | `UNAUTHORIZED`     | 未ログイン、またはセッション無効                | 作成しない       |
 | 400    | `VALIDATION_ERROR` | JSON不正、未知項目、文字数不正                  | 作成しない       |
 | 500    | `DATABASE_ERROR`   | 人間投稿の保存失敗                              | 作成されていない |
-| 500    | `INTERNAL_ERROR`   | セッションユーザーの profile 不在など設定不整合 | 作成保証なし     |
+| 500    | `INTERNAL_ERROR`   | セッションユーザーまたは Guest の profile 不在  | 作成保証なし     |
+
+`UNAUTHORIZED`（401）は T-140 以降、未ログイン投稿では使わない。セッション cookie が壊れていても Guest へフォールバックしてよい（実装は T-141）。
 
 AI生成・AI返信保存の失敗は共通エラーへせず、201の `meta.failedAi` へ含めます。OpenAI 失敗を HTTP 500 へ変換しません。
 
