@@ -94,9 +94,9 @@ sequenceDiagram
 Post-MVPでは、投稿著者は次のとおりです。
 
 1. ログイン中 → セッションの人間 `profiles`
-2. 未ログイン → 固定 Guest（`@guest` / ADR-010 / T-140）
+2. 未ログイン → 固定 Guest（`@guest` / ADR-010）。seed / migration は T-140、API フォールバックは T-141
 
-旧 `@you` は Guest へリネームして再利用する。
+旧 `@you`（UUID `...0001`）は Guest へリネームして再利用する（T-140）。
 
 ```mermaid
 sequenceDiagram

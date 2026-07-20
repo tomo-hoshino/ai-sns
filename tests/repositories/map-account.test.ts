@@ -9,8 +9,8 @@ import {
 
 const humanRow = {
   id: "00000000-0000-4000-8000-000000000001",
-  handle: "you",
-  display_name: "あなた",
+  handle: "guest",
+  display_name: "Guest",
   bio: "AI社員と一緒に働く人",
   account_type: "human",
   persona_key: null,
@@ -31,8 +31,8 @@ describe("mapAccount", () => {
   it("maps a human profile row to camelCase Account", () => {
     expect(mapAccount(humanRow)).toEqual({
       id: humanRow.id,
-      handle: "you",
-      displayName: "あなた",
+      handle: "guest",
+      displayName: "Guest",
       bio: "AI社員と一緒に働く人",
       accountType: "human",
       personaKey: null,
@@ -77,7 +77,7 @@ describe("mapAccount", () => {
 describe("mapAccountFromUnknown", () => {
   it("accepts a valid row shape", () => {
     expect(isProfileRow(humanRow)).toBe(true);
-    expect(mapAccountFromUnknown(humanRow).handle).toBe("you");
+    expect(mapAccountFromUnknown(humanRow).handle).toBe("guest");
   });
 
   it("rejects malformed rows", () => {

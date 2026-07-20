@@ -27,8 +27,8 @@ afterEach(() => {
 
 const humanAuthor: Account = {
   id: "00000000-0000-4000-8000-000000000001",
-  handle: "you",
-  displayName: "あなた",
+  handle: "guest",
+  displayName: "Guest",
   bio: "AI社員と一緒に働く人",
   accountType: "human",
   personaKey: null,
@@ -69,8 +69,8 @@ describe("PostCard", () => {
       <PostCard post={humanPost} aiAccounts={aiAccounts} replyCount={2} />,
     );
 
-    expect(screen.getByText("あなた")).toBeInTheDocument();
-    expect(screen.getByText("@you")).toBeInTheDocument();
+    expect(screen.getByText("Guest")).toBeInTheDocument();
+    expect(screen.getByText("@guest")).toBeInTheDocument();
     expect(screen.getByText("返信 2件")).toBeInTheDocument();
 
     const time = screen.getByText(/前$/);
@@ -78,7 +78,7 @@ describe("PostCard", () => {
     expect(time).toHaveAttribute("dateTime", humanPost.createdAt);
 
     expect(
-      screen.getByRole("link", { name: "@youの投稿の返信を表示" }),
+      screen.getByRole("link", { name: "@guestの投稿の返信を表示" }),
     ).toHaveAttribute("href", `/posts/${humanPost.id}`);
   });
 
@@ -89,18 +89,18 @@ describe("PostCard", () => {
 
     const profileHref = `/profiles/${humanAuthor.handle}`;
     const profileLinks = screen.getAllByRole("link", {
-      name: "あなた（@you）のプロフィール",
+      name: "Guest（@guest）のプロフィール",
     });
     expect(profileLinks.length).toBeGreaterThanOrEqual(1);
     for (const link of profileLinks) {
       expect(link).toHaveAttribute("href", profileHref);
     }
 
-    expect(screen.getByRole("link", { name: "あなた" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Guest" })).toHaveAttribute(
       "href",
       profileHref,
     );
-    expect(screen.getByRole("link", { name: "@you" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "@guest" })).toHaveAttribute(
       "href",
       profileHref,
     );

@@ -17,8 +17,8 @@ vi.mock("@/lib/services/get-profile", () => ({
 const humanResponse: GetProfileResponse = {
   data: {
     id: "00000000-0000-4000-8000-000000000001",
-    handle: "you",
-    displayName: "あなた",
+    handle: "guest",
+    displayName: "Guest",
     bio: "AI社員と一緒に働く人",
     accountType: "human",
     personaKey: null,
@@ -56,7 +56,7 @@ describe("GET /api/profiles/[handle]", () => {
   it("returns 200 for a human profile with Cache-Control", async () => {
     getProfileMock.mockResolvedValue(humanResponse);
 
-    const response = await GET(createRequest("you"), createContext("you"));
+    const response = await GET(createRequest("guest"), createContext("guest"));
     const body: unknown = await response.json();
 
     expect(response.status).toBe(200);
@@ -65,7 +65,7 @@ describe("GET /api/profiles/[handle]", () => {
     );
     expect(getProfileResponseSchema.safeParse(body).success).toBe(true);
     expect(body).toEqual(humanResponse);
-    expect(getProfileMock).toHaveBeenCalledWith({ handle: "you" });
+    expect(getProfileMock).toHaveBeenCalledWith({ handle: "guest" });
   });
 
   it("returns 200 for an AI profile with the same shape", async () => {

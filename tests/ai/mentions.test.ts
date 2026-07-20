@@ -142,9 +142,9 @@ describe("extractMentionedAiAccounts", () => {
     );
   });
 
-  it("ignores the human handle @you when only AI accounts are provided", () => {
+  it("ignores the human handle @guest when only AI accounts are provided", () => {
     const result = extractMentionedAiAccounts(
-      "@you @sendo-ai 見てください",
+      "@guest @sendo-ai 見てください",
       aiAccounts,
     );
 

@@ -27,8 +27,8 @@ afterEach(() => {
 
 const humanAuthor: Account = {
   id: "00000000-0000-4000-8000-000000000001",
-  handle: "you",
-  displayName: "あなた",
+  handle: "guest",
+  displayName: "Guest",
   bio: "AI社員と一緒に働く人",
   accountType: "human",
   personaKey: null,
@@ -76,7 +76,7 @@ describe("ProfilePostList", () => {
     expect(screen.getByText("プロフィール用のルート投稿")).toBeInTheDocument();
     expect(screen.getByText("返信 1件")).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "@youの投稿の返信を表示" }),
+      screen.getByRole("link", { name: "@guestの投稿の返信を表示" }),
     ).toBeInTheDocument();
   });
 });

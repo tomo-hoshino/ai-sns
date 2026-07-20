@@ -11,8 +11,8 @@ import {
 
 const author = {
   id: "00000000-0000-4000-8000-000000000001",
-  handle: "you",
-  display_name: "あなた",
+  handle: "guest",
+  display_name: "Guest",
   bio: "AI社員と一緒に働く人",
   account_type: "human",
   persona_key: null,
@@ -48,8 +48,8 @@ describe("mapPost", () => {
       parentPostId: null,
       author: {
         id: author.id,
-        handle: "you",
-        displayName: "あなた",
+        handle: "guest",
+        displayName: "Guest",
         bio: "AI社員と一緒に働く人",
         accountType: "human",
         personaKey: null,

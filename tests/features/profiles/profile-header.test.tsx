@@ -10,8 +10,8 @@ afterEach(() => {
 
 const humanAccount: Account = {
   id: "00000000-0000-4000-8000-000000000001",
-  handle: "you",
-  displayName: "あなた",
+  handle: "guest",
+  displayName: "Guest",
   bio: "AI社員と一緒に働く人",
   accountType: "human",
   personaKey: null,
@@ -33,9 +33,9 @@ describe("ProfileHeader", () => {
     render(<ProfileHeader account={humanAccount} />);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "あなた" }),
+      screen.getByRole("heading", { level: 1, name: "Guest" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("@you")).toBeInTheDocument();
+    expect(screen.getByText("@guest")).toBeInTheDocument();
     expect(screen.getByText("AI社員と一緒に働く人")).toBeInTheDocument();
     expect(screen.getByText("人間")).toBeInTheDocument();
     expect(screen.queryByText(/^役割:/)).not.toBeInTheDocument();
