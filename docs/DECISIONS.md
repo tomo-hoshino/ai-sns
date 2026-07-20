@@ -25,6 +25,7 @@
 | ADR-009 | auth.users と profiles の紐付けと RLS 初期案          | Accepted | 2026-07-19 |
 | ADR-010 | 未ログイン投稿は共有 Guest アカウントとする           | Accepted | 2026-07-20 |
 | ADR-011 | About画面で仕様・技術・実装手順を公開する             | Accepted | 2026-07-20 |
+| ADR-012 | ルートは入口のみ、ツール設定は config/ へ集約する     | Accepted | 2026-07-20 |
 
 ---
 
@@ -625,3 +626,50 @@ Accepted
 | GitHub docs への外部リンクのみ | アプリ内導線がなく、モバイルでの閲覧体験が弱い  |
 | `/docs` で markdown を配信     | bundler / セキュリティ / 更新同期の運用が増える |
 | README を iframe 表示          | スタイルとアクセシビリティが崩れる              |
+
+---
+
+## ADR-012: ルートは入口のみ、ツール設定は config/ へ集約する
+
+### Status
+
+Accepted
+
+### Context
+
+リポジトリ直下に ESLint / Prettier / Vitest の設定と `proxy.ts` が散在し、プロジェクト入口とツール設定の境界が分かりにくかった。
+
+### Decision
+
+**ルートは Next.js / pnpm / Cursor が要求する入口ファイルだけに留め、ツール設定は `config/` へ移す。`proxy.ts` は `src/proxy.ts` へ置く。**
+
+| 項目     | 内容                                                                 |
+| -------- | -------------------------------------------------------------------- |
+| 移動先   | `config/eslint.config.mjs`、`config/prettier.config.json`、`config/vitest.config.ts` |
+| Proxy    | `src/proxy.ts`（`src/app` と同階層の Next.js 規約）                  |
+| ルート残 | `package.json`、`next.config.ts`、`tsconfig.json`、`AGENTS.md` など  |
+| IDE      | `.vscode/settings.json` で ESLint の config パスを指定               |
+
+### 理由
+
+- ルート直下を「起動・依存・エージェント入口」に限定できる
+- package.json の script で明示パスを渡せば、設定の所在が追える
+- `proxy.ts` はルート必須ではなく `src/` 配置が公式に許容される
+
+### Consequences
+
+良い影響:
+
+- ルートのファイル数が減り、入口とツール設定が分離される
+
+注意点:
+
+- IDE の ESLint / Prettier 解決がルート自動検出に依存しないよう、script と settings を維持する
+- `postcss.config.mjs` と `components.json` はツール都合でルートに残る
+
+### Rejected alternatives
+
+| 代替                         | 見送った理由                                           |
+| ---------------------------- | ------------------------------------------------------ |
+| `AGENTS.md` を docs/ へ移動  | Cursor のルート規約と常時適用ルールが切れやすい        |
+| すべての config をルート再export stub | ファイル数は減らず、入口と実体の二重管理になる |

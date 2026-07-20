@@ -6,14 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint --config config/eslint.config.mjs .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "test": "vitest run --config config/vitest.config.ts",
+    "test:watch": "vitest --config config/vitest.config.ts",
+    "format": "prettier --config config/prettier.config.json --ignore-path config/.prettierignore --write .",
+    "format:check": "prettier --config config/prettier.config.json --ignore-path config/.prettierignore --check .",
     "db:types": "node scripts/db-types.mjs"
   },
+  "prettier": "./config/prettier.config.json",
+
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.7",

@@ -238,7 +238,7 @@ src/
     └── post.ts
 ```
 
-リポジトリ直下の `proxy.ts` は Auth session cookie の refresh 用（未ログインでも閲覧可。ログイン必須リダイレクトはしない）。
+`src/proxy.ts` は Auth session cookie の refresh 用（未ログインでも閲覧可。ログイン必須リダイレクトはしない）。`src/app` と同階層に置く Next.js の Proxy 規約に従う。
 
 ### 配置ルール
 

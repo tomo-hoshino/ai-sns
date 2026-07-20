@@ -1,0 +1,3 @@
+{
+  "eslint.options.overrideConfigFile": "config/eslint.config.mjs"
+}
