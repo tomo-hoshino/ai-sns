@@ -82,6 +82,51 @@ describe("PostCard", () => {
     ).toHaveAttribute("href", `/posts/${humanPost.id}`);
   });
 
+  it("links avatar, display name, and handle to the author profile", () => {
+    render(
+      <PostCard post={humanPost} aiAccounts={aiAccounts} replyCount={0} />,
+    );
+
+    const profileHref = `/profiles/${humanAuthor.handle}`;
+    const profileLinks = screen.getAllByRole("link", {
+      name: "あなた（@you）のプロフィール",
+    });
+    expect(profileLinks.length).toBeGreaterThanOrEqual(1);
+    for (const link of profileLinks) {
+      expect(link).toHaveAttribute("href", profileHref);
+    }
+
+    expect(screen.getByRole("link", { name: "あなた" })).toHaveAttribute(
+      "href",
+      profileHref,
+    );
+    expect(screen.getByRole("link", { name: "@you" })).toHaveAttribute(
+      "href",
+      profileHref,
+    );
+  });
+
+  it("links AI author identity to the AI profile", () => {
+    render(
+      <PostCard post={aiReplyPost} aiAccounts={aiAccounts} replyCount={0} />,
+    );
+
+    const profileHref = `/profiles/${backendAi.handle}`;
+
+    expect(
+      screen.getByRole("link", {
+        name: "メンターAI「センドウ」（@sendo-ai）のプロフィール",
+      }),
+    ).toHaveAttribute("href", profileHref);
+    expect(
+      screen.getByRole("link", { name: "メンターAI「センドウ」" }),
+    ).toHaveAttribute("href", profileHref);
+    expect(screen.getByRole("link", { name: "@sendo-ai" })).toHaveAttribute(
+      "href",
+      profileHref,
+    );
+  });
+
   it("does not show an AI badge for human authors", () => {
     render(
       <PostCard post={humanPost} aiAccounts={aiAccounts} replyCount={0} />,

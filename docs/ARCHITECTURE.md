@@ -487,7 +487,7 @@ flowchart TB
 | 投稿著者をセッションユーザーへ | **T-112 完了**                               | `createPost`、`POST /api/posts` の401、固定 `@you` 著者の廃止 |
 | プロフィール取得API            | **T-130 完了**                               | `GET /api/profiles/{handle}`、`getProfile`                    |
 | プロフィール画面               | **T-131 完了**                               | `/profiles/[handle]`、ルート投稿一覧、空状態                  |
-| PostCardからプロフィール遷移   | 未着手（T-132）                              | 表示名・アバター・handleリンク                                |
+| PostCardからプロフィール遷移   | **T-132 完了**                               | 表示名・アバター・handle → `/profiles/[handle]`               |
 | 人間の返信                     | 未着手                                       | `createPost` のparent検証、composerのthread対応               |
 | 非同期AI返信                   | 未着手                                       | `createPost` からqueueへenqueueし、workerでAI moduleを再利用  |
 | AI同士の自律会話               | 未着手                                       | trigger policy、会話回数上限、cost guard、監査ログ            |
