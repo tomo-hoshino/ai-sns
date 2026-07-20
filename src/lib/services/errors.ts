@@ -37,3 +37,22 @@ export class GetThreadError extends Error {
     this.code = code;
   }
 }
+
+export type GetProfileErrorCode = "PROFILE_NOT_FOUND";
+
+/**
+ * Domain error from getProfile when no account matches the handle.
+ */
+export class GetProfileError extends Error {
+  readonly name = "GetProfileError";
+  readonly code: GetProfileErrorCode;
+
+  constructor(
+    code: GetProfileErrorCode,
+    message: string,
+    options?: { cause?: unknown },
+  ) {
+    super(message, options);
+    this.code = code;
+  }
+}
